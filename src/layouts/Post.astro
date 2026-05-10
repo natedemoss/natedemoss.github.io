@@ -1,0 +1,16 @@
+---
+import Base from './Base.astro';
+const { frontmatter } = Astro.props;
+const date = new Date(frontmatter.date).toLocaleDateString('en-US', {
+  year: 'numeric', month: 'long', day: 'numeric'
+});
+---
+<Base title={frontmatter.title} description={frontmatter.description}>
+  <main>
+    <article>
+      <h1 class="post-title">{frontmatter.title}</h1>
+      <div class="post-meta">{date}{frontmatter.authors ? ` · ${frontmatter.authors.join(', ')}` : ''}</div>
+      <slot />
+    </article>
+  </main>
+</Base>
