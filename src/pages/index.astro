@@ -7,7 +7,7 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
 ---
 <Base title="Nathan DeMoss">
   <main>
-    <p class="intro">Intersting Stuff!!!</p>
+    <p class="intro">Interesting Stuff!!!</p>
     <ul class="post-list">
       {posts.map((p) => (
         <li>
