@@ -1,0 +1,29 @@
+---
+title: "Linked lists and neural networks"
+description: "An RNN unrolled is a linked list. Autograd is too."
+date: 2026-05-10
+---
+
+A linked list: a node holds a value and a pointer to the next node.
+
+An RNN unrolled in time has the same shape. Each step has a hidden state $h_t$ and a "pointer" to step $t+1$ via the recurrence
+
+$$h_{t+1} = f(h_t, x_{t+1}).$$
+
+Walking forward through the sequence is traversing the list. Backprop through time is walking it backward. That's why doubly linked lists exist.
+
+## Autograd
+
+PyTorch's autograd is the cleaner example. Every tensor with `requires_grad=True` stores a `grad_fn` pointer to the op that produced it, and that op holds pointers back to its inputs. A forward pass like
+
+```python
+z = (x @ W + b).relu()
+```
+
+builds the chain `z -> Relu -> Add -> Mm -> (x, W, b)`. Calling `z.backward()` walks that chain backward, applying each node's gradient. Same algorithm as walking a linked list, except a node can have several parents, so it's a DAG.
+
+## Why the structure has to be there
+
+Reverse-mode autodiff computes $\partial L / \partial x$ by starting at $L$ and going back. You can't go back without a back-pointer. That's the whole reason a "computation graph" exists in any framework: each node remembers its parents so gradient can flow the other way.
+
+The data-structure chapter of intro CS is doing more work in deep learning than it gets credit for.
