@@ -1,0 +1,186 @@
+---
+title: "Less is a lot"
+description: "A defense of the 3D rotating cube on every blog."
+date: 2026-05-11
+---
+
+<style>{`
+.oe {
+  --p: #ff0080;
+  --s: #00ffe1;
+  --t: #ffea00;
+  position: relative;
+  margin: 2rem calc(50% - 50vw);
+  max-width: 100vw;
+  padding: 1rem 2rem 3rem;
+  overflow: hidden;
+  isolation: isolate;
+  font-family: var(--sans);
+}
+.oe .blob {
+  position: absolute; inset: -100px;
+  background:
+    radial-gradient(circle at 20% 30%, var(--p) 0%, transparent 35%),
+    radial-gradient(circle at 80% 70%, var(--s) 0%, transparent 35%),
+    radial-gradient(circle at 50% 80%, var(--t) 0%, transparent 30%);
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: blob 16s linear infinite;
+  z-index: -1;
+}
+@keyframes blob { to { transform: rotate(360deg) scale(1.15); } }
+
+.oe .hero {
+  position: relative;
+  height: 360px;
+  display: grid; place-items: center;
+  perspective: 900px;
+}
+.oe .cube {
+  width: 160px; height: 160px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: rot 8s linear infinite;
+}
+@keyframes rot { to { transform: rotateX(360deg) rotateY(720deg); } }
+.oe .face {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 1.3rem;
+  color: white; letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--p), var(--s));
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 0 40px rgba(255, 0, 128, 0.45);
+}
+.oe .f1 { transform: translateZ(80px); }
+.oe .f2 { transform: rotateY(180deg) translateZ(80px); }
+.oe .f3 { transform: rotateY(90deg) translateZ(80px); }
+.oe .f4 { transform: rotateY(-90deg) translateZ(80px); }
+.oe .f5 { transform: rotateX(90deg) translateZ(80px); }
+.oe .f6 { transform: rotateX(-90deg) translateZ(80px); }
+
+.oe .particles { position: absolute; inset: 0; pointer-events: none; }
+.oe .particle {
+  position: absolute; bottom: -10px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--s);
+  box-shadow: 0 0 12px var(--s);
+  animation: float 6s linear infinite;
+}
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(40px, -380px) scale(0.4); opacity: 0; }
+}
+
+.oe .glitch {
+  font-size: 2.6rem; font-weight: 900;
+  text-align: center; margin: 1rem 0 2rem;
+  color: black; position: relative; line-height: 1;
+}
+.oe .glitch::before, .oe .glitch::after {
+  content: attr(data-text);
+  position: absolute; inset: 0;
+}
+.oe .glitch::before { color: var(--p); animation: gl 2.7s infinite; }
+.oe .glitch::after  { color: var(--s); animation: gl 3.3s infinite reverse; }
+@keyframes gl {
+  0%, 100% { transform: translate(0,0); clip-path: inset(0); }
+  20% { transform: translate(-3px, 2px); clip-path: inset(20% 0 60% 0); }
+  40% { transform: translate(3px, -2px); clip-path: inset(55% 0 25% 0); }
+  60% { transform: translate(-2px, -1px); clip-path: inset(70% 0 10% 0); }
+  80% { transform: translate(2px, 1px); clip-path: inset(10% 0 75% 0); }
+}
+
+.oe .marquee {
+  overflow: hidden; white-space: nowrap;
+  background: black; color: var(--t);
+  font-weight: 800; letter-spacing: 0.25em;
+  padding: 0.6rem 0; margin: 1.5rem 0; font-size: 1rem;
+}
+.oe .marquee span {
+  display: inline-block; padding-left: 100%;
+  animation: scroll 14s linear infinite;
+}
+@keyframes scroll { to { transform: translateX(-100%); } }
+
+.oe .loader {
+  height: 22px; background: #eee; border-radius: 11px;
+  overflow: hidden; margin: 1.5rem 0;
+}
+.oe .loader-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--p), var(--t), var(--s));
+  background-size: 300% 100%;
+  animation: load 4s ease-in-out infinite, hue 4s linear infinite;
+}
+@keyframes load { 0%,100%{width:0%} 50%{width:73%} }
+@keyframes hue  { to { background-position: 300% 0; } }
+
+.oe .bounce { display: inline-block; animation: bounce 1.2s ease-in-out infinite; }
+@keyframes bounce { 50% { transform: translateY(-10px) rotate(15deg); } }
+
+.oe .body {
+  max-width: 640px; margin: 2.5rem auto 0;
+  font-family: var(--serif); font-size: 1.02rem; line-height: 1.7;
+  color: var(--text);
+}
+.oe .body p { margin: 0 0 1.1rem; }
+.oe .body em { color: var(--p); font-style: italic; }
+
+.oe .badge {
+  display: inline-block; padding: 0.2rem 0.6rem;
+  background: black; color: var(--t);
+  font-weight: 800; font-size: 0.75rem;
+  letter-spacing: 0.15em; border-radius: 4px;
+  transform: rotate(-3deg);
+}
+`}</style>
+
+<div class="oe">
+  <div class="blob" />
+
+  <div class="hero">
+    <div class="cube">
+      <div class="face f1">SIMPLE</div>
+      <div class="face f2">SIMPLE</div>
+      <div class="face f3">SIMPLE</div>
+      <div class="face f4">SIMPLE</div>
+      <div class="face f5">SIMPLE</div>
+      <div class="face f6">SIMPLE</div>
+    </div>
+    <div class="particles">
+      {Array.from({length: 28}).map((_, i) => (
+        <span class="particle" style={`left: ${(i * 3.7) % 100}%; animation-delay: ${(i * 0.27) % 6}s; animation-duration: ${5 + (i % 4)}s;`} />
+      ))}
+    </div>
+  </div>
+
+  <div class="glitch" data-text="LESS IS A LOT">LESS IS A LOT</div>
+
+  <div class="marquee">
+    <span>★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★</span>
+  </div>
+
+  <div class="loader"><div class="loader-bar" /></div>
+
+  <div class="body">
+    <p><span class="badge">A MANIFESTO</span></p>
+
+    <p>The plain text below explains why your blog needs a 3D rotating cube. The cube was necessary to convey this. <span class="bounce">🚀</span></p>
+
+    <p>Static HTML had its moment. That moment was 1993. Today's reader expects, at minimum, one element rotating in three dimensions, a particle field, a glitching headline, a marquee, and a loading bar that loads nothing. Anything less is contempt for the user.</p>
+
+    <p>Some argue 14 KB of HTML is "enough." 14 KB is a tomb. Pad your bundle to 4.2 MB so the reader can feel the work going into it.</p>
+
+    <p>Common objections:</p>
+
+    <p><em>"It's slow."</em> The slowness is the point. Loading time is a moment of contemplation.<br/>
+    <em>"I can't read the text."</em> You weren't supposed to read it. You were supposed to feel it.<br/>
+    <em>"My laptop fan turned on."</em> Your laptop is engaged.</p>
+
+    <p>If your site does not autoplay a WebGL scene, register a custom cursor, hijack the scroll wheel, request notification permissions, and animate every paragraph in from a different cardinal direction, you are not building a website. You are publishing a document. Documents are for libraries.</p>
+
+    <p>This post was written in 12 minutes. The cube took six hours. Both convey the same idea. Only one of them is a brand.</p>
+  </div>
+</div>
