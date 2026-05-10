@@ -1,186 +1,387 @@
 ---
 title: "Less is a lot"
-description: "A defense of the 3D rotating cube on every blog."
+description: "A fully-functional parody of every 'creative developer' portfolio."
 date: 2026-05-11
 ---
 
+<div class="disclaimer">
+  <strong>Note.</strong> Everything below is a parody of portfolios like <a href="https://abdulkadersafi.com/#hero" target="_blank" rel="noopener">this one</a>: 100vh hero with a 3D model, animated counters, a marquee of buzzwords, a pulsating tech-stack grid, fake testimonials, and a "let's build something magical" CTA. It is a single MDX file with no JavaScript, demonstrating that you can replicate the entire genre with about 300 lines of CSS. The point is not that animation is bad. The point is that 90% of these sites are wearing a costume.
+</div>
+
 <style>{`
 .oe {
-  --p: #ff0080;
-  --s: #00ffe1;
-  --t: #ffea00;
+  --p: #ff2d87;
+  --s: #00f0ff;
+  --t: #ffe600;
+  --bg: #0a0a12;
+  --ink: #f6f6ff;
   position: relative;
   margin: 2rem calc(50% - 50vw);
   max-width: 100vw;
-  padding: 1rem 2rem 3rem;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--bg);
   overflow: hidden;
   isolation: isolate;
-  font-family: var(--sans);
 }
-.oe .blob {
-  position: absolute; inset: -100px;
-  background:
-    radial-gradient(circle at 20% 30%, var(--p) 0%, transparent 35%),
-    radial-gradient(circle at 80% 70%, var(--s) 0%, transparent 35%),
-    radial-gradient(circle at 50% 80%, var(--t) 0%, transparent 30%);
-  filter: blur(80px);
-  opacity: 0.35;
-  animation: blob 16s linear infinite;
-  z-index: -1;
-}
-@keyframes blob { to { transform: rotate(360deg) scale(1.15); } }
+.oe a { color: inherit; border: none; }
+.oe strong { color: var(--t); }
 
-.oe .hero {
+/* ============ HERO ============ */
+.oe-hero {
   position: relative;
-  height: 360px;
-  display: grid; place-items: center;
-  perspective: 900px;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  perspective: 1200px;
+  overflow: hidden;
 }
-.oe .cube {
-  width: 160px; height: 160px;
+.oe-mesh {
+  position: absolute; inset: -10%;
+  background:
+    radial-gradient(circle at 18% 28%, var(--p) 0%, transparent 38%),
+    radial-gradient(circle at 82% 72%, var(--s) 0%, transparent 38%),
+    radial-gradient(circle at 50% 90%, var(--t) 0%, transparent 28%);
+  filter: blur(90px);
+  opacity: 0.45;
+  animation: mesh 22s linear infinite;
+  z-index: 0;
+}
+@keyframes mesh { to { transform: rotate(360deg) scale(1.1); } }
+
+.oe-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 80%);
+  z-index: 1;
+}
+
+.oe-cube-wrap {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.oe-cube {
+  width: 220px; height: 220px;
   position: relative;
   transform-style: preserve-3d;
-  animation: rot 8s linear infinite;
+  animation: rot 11s linear infinite;
 }
 @keyframes rot { to { transform: rotateX(360deg) rotateY(720deg); } }
-.oe .face {
+.oe-face {
   position: absolute; inset: 0;
   display: grid; place-items: center;
-  font-weight: 800; font-size: 1.3rem;
-  color: white; letter-spacing: 0.08em;
+  font-weight: 900; font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  color: white;
   background: linear-gradient(135deg, var(--p), var(--s));
-  border: 1px solid rgba(255,255,255,0.4);
-  box-shadow: 0 0 40px rgba(255, 0, 128, 0.45);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: 0 0 60px rgba(255, 45, 135, 0.55);
 }
-.oe .f1 { transform: translateZ(80px); }
-.oe .f2 { transform: rotateY(180deg) translateZ(80px); }
-.oe .f3 { transform: rotateY(90deg) translateZ(80px); }
-.oe .f4 { transform: rotateY(-90deg) translateZ(80px); }
-.oe .f5 { transform: rotateX(90deg) translateZ(80px); }
-.oe .f6 { transform: rotateX(-90deg) translateZ(80px); }
+.oe-f1 { transform: translateZ(110px); }
+.oe-f2 { transform: rotateY(180deg) translateZ(110px); }
+.oe-f3 { transform: rotateY(90deg)  translateZ(110px); }
+.oe-f4 { transform: rotateY(-90deg) translateZ(110px); }
+.oe-f5 { transform: rotateX(90deg)  translateZ(110px); }
+.oe-f6 { transform: rotateX(-90deg) translateZ(110px); }
 
-.oe .particles { position: absolute; inset: 0; pointer-events: none; }
-.oe .particle {
+.oe-hero-text {
+  position: relative; z-index: 3;
+  text-align: center;
+  margin-top: 380px;
+  pointer-events: none;
+}
+.oe-hero-text .role {
+  font-size: 0.85rem; letter-spacing: 0.4em;
+  color: var(--s); margin-bottom: 0.8rem;
+}
+.oe-hero-text h1 {
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-weight: 900; line-height: 0.95;
+  margin: 0; letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--p), var(--t), var(--s));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+.oe-hero-text .sub {
+  margin-top: 1rem; font-size: 1.05rem;
+  color: rgba(255,255,255,0.7);
+  max-width: 540px; margin-left: auto; margin-right: auto;
+}
+.oe-scroll {
+  position: absolute; bottom: 2rem; left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem; letter-spacing: 0.4em;
+  color: rgba(255,255,255,0.5); z-index: 3;
+  animation: bob 2s ease-in-out infinite;
+}
+@keyframes bob { 50% { transform: translate(-50%, 8px); } }
+
+.oe-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.oe-particle {
   position: absolute; bottom: -10px;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--s);
-  box-shadow: 0 0 12px var(--s);
-  animation: float 6s linear infinite;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--s); box-shadow: 0 0 10px var(--s);
+  animation: float linear infinite;
 }
 @keyframes float {
-  0% { transform: translate(0, 0) scale(1); opacity: 0; }
-  15% { opacity: 1; }
-  100% { transform: translate(40px, -380px) scale(0.4); opacity: 0; }
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-110vh) translateX(40px); opacity: 0; }
 }
 
-.oe .glitch {
-  font-size: 2.6rem; font-weight: 900;
-  text-align: center; margin: 1rem 0 2rem;
-  color: black; position: relative; line-height: 1;
-}
-.oe .glitch::before, .oe .glitch::after {
-  content: attr(data-text);
-  position: absolute; inset: 0;
-}
-.oe .glitch::before { color: var(--p); animation: gl 2.7s infinite; }
-.oe .glitch::after  { color: var(--s); animation: gl 3.3s infinite reverse; }
-@keyframes gl {
-  0%, 100% { transform: translate(0,0); clip-path: inset(0); }
-  20% { transform: translate(-3px, 2px); clip-path: inset(20% 0 60% 0); }
-  40% { transform: translate(3px, -2px); clip-path: inset(55% 0 25% 0); }
-  60% { transform: translate(-2px, -1px); clip-path: inset(70% 0 10% 0); }
-  80% { transform: translate(2px, 1px); clip-path: inset(10% 0 75% 0); }
-}
-
-.oe .marquee {
-  overflow: hidden; white-space: nowrap;
+/* ============ MARQUEE ============ */
+.oe-marquee {
   background: black; color: var(--t);
-  font-weight: 800; letter-spacing: 0.25em;
-  padding: 0.6rem 0; margin: 1.5rem 0; font-size: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden; white-space: nowrap;
+  font-weight: 900; font-size: 1.6rem;
+  letter-spacing: 0.2em; padding: 1rem 0;
 }
-.oe .marquee span {
-  display: inline-block; padding-left: 100%;
-  animation: scroll 14s linear infinite;
-}
+.oe-marquee span { display: inline-block; padding-left: 100%; animation: scroll 22s linear infinite; }
 @keyframes scroll { to { transform: translateX(-100%); } }
 
-.oe .loader {
-  height: 22px; background: #eee; border-radius: 11px;
-  overflow: hidden; margin: 1.5rem 0;
+/* ============ STATS ============ */
+.oe-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px; background: rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.oe .loader-bar {
-  height: 100%; width: 0%;
+.oe-stat {
+  background: var(--bg);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  position: relative;
+}
+.oe-stat .n {
+  font-size: 3.5rem; font-weight: 900;
+  background: linear-gradient(180deg, var(--ink), var(--s));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-variant-numeric: tabular-nums;
+  animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse { 50% { transform: scale(1.04); } }
+.oe-stat .l { font-size: 0.7rem; letter-spacing: 0.3em; color: rgba(255,255,255,0.5); margin-top: 0.5rem; }
+
+/* ============ SECTION HEADERS ============ */
+.oe-section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; position: relative; }
+.oe-eyebrow {
+  font-size: 0.7rem; letter-spacing: 0.4em;
+  color: var(--p); margin-bottom: 0.6rem;
+}
+.oe-h {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900; line-height: 1; margin: 0 0 3rem;
+  letter-spacing: -0.02em;
+}
+
+/* ============ TECH STACK ============ */
+.oe-stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 1.5rem;
+}
+.oe-tech {
+  aspect-ratio: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  display: grid; place-items: center; text-align: center;
+  font-weight: 800; font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  transition: transform 0.4s, box-shadow 0.4s;
+  animation: techglow 4s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+@keyframes techglow {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 45, 135, 0); }
+  50% { box-shadow: 0 0 30px rgba(255, 45, 135, 0.5); }
+}
+
+/* ============ PROJECTS ============ */
+.oe-projects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.oe-project {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--p), var(--s));
+  display: grid;
+  align-items: end;
+  padding: 1.5rem;
+  isolation: isolate;
+  cursor: pointer;
+}
+.oe-project:nth-child(2) { background: linear-gradient(135deg, var(--s), var(--t)); }
+.oe-project:nth-child(3) { background: linear-gradient(135deg, var(--t), var(--p)); }
+.oe-project:nth-child(4) { background: linear-gradient(135deg, var(--p), #6e00ff); }
+.oe-project::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: -1; transition: opacity 0.4s;
+}
+.oe-project:hover::before { opacity: 0.7; }
+.oe-project .pname { font-size: 1.6rem; font-weight: 900; }
+.oe-project .ptag  { font-size: 0.7rem; letter-spacing: 0.3em; opacity: 0.8; margin-top: 0.4rem; }
+
+/* ============ TESTIMONIALS ============ */
+.oe-quotes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+.oe-quote {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.8rem;
+}
+.oe-quote .q { font-style: italic; font-size: 1.05rem; line-height: 1.55; margin-bottom: 1rem; }
+.oe-quote .a { font-size: 0.8rem; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; }
+
+/* ============ CTA ============ */
+.oe-cta {
+  text-align: center;
+  padding: 8rem 2rem;
+  position: relative;
+  background: radial-gradient(ellipse at center, rgba(255, 45, 135, 0.15), transparent 70%);
+}
+.oe-cta h2 {
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 900;
   background: linear-gradient(90deg, var(--p), var(--t), var(--s));
-  background-size: 300% 100%;
-  animation: load 4s ease-in-out infinite, hue 4s linear infinite;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  margin: 0 0 1rem; line-height: 0.95;
+  letter-spacing: -0.03em;
 }
-@keyframes load { 0%,100%{width:0%} 50%{width:73%} }
-@keyframes hue  { to { background-position: 300% 0; } }
-
-.oe .bounce { display: inline-block; animation: bounce 1.2s ease-in-out infinite; }
-@keyframes bounce { 50% { transform: translateY(-10px) rotate(15deg); } }
-
-.oe .body {
-  max-width: 640px; margin: 2.5rem auto 0;
-  font-family: var(--serif); font-size: 1.02rem; line-height: 1.7;
-  color: var(--text);
+.oe-cta .btn {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 1rem 2.5rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 800; letter-spacing: 0.2em; font-size: 0.85rem;
+  text-decoration: none;
 }
-.oe .body p { margin: 0 0 1.1rem; }
-.oe .body em { color: var(--p); font-style: italic; }
 
-.oe .badge {
-  display: inline-block; padding: 0.2rem 0.6rem;
-  background: black; color: var(--t);
-  font-weight: 800; font-size: 0.75rem;
-  letter-spacing: 0.15em; border-radius: 4px;
-  transform: rotate(-3deg);
+/* ============ FOOTER ============ */
+.oe-foot {
+  text-align: center; padding: 2.5rem;
+  font-size: 0.75rem; color: rgba(255,255,255,0.4);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  letter-spacing: 0.15em;
 }
+
+/* ============ DISCLAIMER ============ */
+.disclaimer {
+  background: #fff8e1;
+  border: 1px solid #f5d76e;
+  color: #3a2f00;
+  padding: 1.2rem 1.4rem;
+  border-radius: 6px;
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 2rem;
+}
+.disclaimer a { color: #3a2f00; }
 `}</style>
 
 <div class="oe">
-  <div class="blob" />
 
-  <div class="hero">
-    <div class="cube">
-      <div class="face f1">SIMPLE</div>
-      <div class="face f2">SIMPLE</div>
-      <div class="face f3">SIMPLE</div>
-      <div class="face f4">SIMPLE</div>
-      <div class="face f5">SIMPLE</div>
-      <div class="face f6">SIMPLE</div>
-    </div>
-    <div class="particles">
-      {Array.from({length: 28}).map((_, i) => (
-        <span class="particle" style={`left: ${(i * 3.7) % 100}%; animation-delay: ${(i * 0.27) % 6}s; animation-duration: ${5 + (i % 4)}s;`} />
+  {/* ===================== HERO ===================== */}
+  <section class="oe-hero">
+    <div class="oe-mesh" />
+    <div class="oe-grid" />
+    <div class="oe-particles">
+      {Array.from({length: 36}).map((_, i) => (
+        <span class="oe-particle" style={`left: ${(i * 2.8) % 100}%; animation-delay: ${(i * 0.31) % 8}s; animation-duration: ${7 + (i % 5)}s;`} />
       ))}
     </div>
+    <div class="oe-cube-wrap">
+      <div class="oe-cube">
+        <div class="oe-face oe-f1">CREATIVE</div>
+        <div class="oe-face oe-f2">DEVELOPER</div>
+        <div class="oe-face oe-f3">DESIGNER</div>
+        <div class="oe-face oe-f4">FOUNDER</div>
+        <div class="oe-face oe-f5">THINKER</div>
+        <div class="oe-face oe-f6">VIBES</div>
+      </div>
+    </div>
+    <div class="oe-hero-text">
+      <div class="role">CREATIVE · DEVELOPER · POLYMATH</div>
+      <h1>I build experiences,<br/>not websites.</h1>
+      <p class="sub">Award-nominated full-stack alchemist crafting next-generation digital narratives at the intersection of design, engineering, and meaning.</p>
+    </div>
+    <div class="oe-scroll">SCROLL ↓</div>
+  </section>
+
+  {/* ===================== MARQUEE ===================== */}
+  <div class="oe-marquee">
+    <span>★ AWARD-WINNING ★ AI-NATIVE ★ FULL-STACK ★ HUMAN-CENTERED ★ CRAFT-FORWARD ★ END-TO-END ★ INTENTIONAL ★ AWARD-WINNING ★ AI-NATIVE ★ FULL-STACK ★ HUMAN-CENTERED ★</span>
   </div>
 
-  <div class="glitch" data-text="LESS IS A LOT">LESS IS A LOT</div>
-
-  <div class="marquee">
-    <span>★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★ MINIMALISM ★</span>
+  {/* ===================== STATS ===================== */}
+  <div class="oe-stats">
+    <div class="oe-stat"><div class="n">147+</div><div class="l">PROJECTS SHIPPED</div></div>
+    <div class="oe-stat"><div class="n">12K</div><div class="l">GITHUB STARS</div></div>
+    <div class="oe-stat"><div class="n">98%</div><div class="l">CLIENT SATISFACTION</div></div>
+    <div class="oe-stat"><div class="n">∞</div><div class="l">VIBES</div></div>
   </div>
 
-  <div class="loader"><div class="loader-bar" /></div>
+  {/* ===================== TECH STACK ===================== */}
+  <section class="oe-section">
+    <div class="oe-eyebrow">02 — EXPERTISE</div>
+    <h2 class="oe-h">Stack</h2>
+    <div class="oe-stack">
+      {['REACT','NEXT','TS','NODE','PYTHON','GO','RUST','THREE','GSAP','FIGMA','POSTGRES','REDIS'].map((t, i) => (
+        <div class="oe-tech" style={`--d: ${i * 0.2}s;`}>{t}</div>
+      ))}
+    </div>
+  </section>
 
-  <div class="body">
-    <p><span class="badge">A MANIFESTO</span></p>
+  {/* ===================== PROJECTS ===================== */}
+  <section class="oe-section">
+    <div class="oe-eyebrow">03 — SELECTED WORK</div>
+    <h2 class="oe-h">Featured projects.</h2>
+    <div class="oe-projects">
+      <div class="oe-project"><div><div class="pname">Untitled.app</div><div class="ptag">SAAS · 2024</div></div></div>
+      <div class="oe-project"><div><div class="pname">Lumen</div><div class="ptag">BRAND · 2024</div></div></div>
+      <div class="oe-project"><div><div class="pname">Halo OS</div><div class="ptag">PRODUCT · 2023</div></div></div>
+      <div class="oe-project"><div><div class="pname">Echo Studio</div><div class="ptag">EXPERIMENT · 2023</div></div></div>
+    </div>
+  </section>
 
-    <p>The plain text below explains why your blog needs a 3D rotating cube. The cube was necessary to convey this. <span class="bounce">🚀</span></p>
+  {/* ===================== TESTIMONIALS ===================== */}
+  <section class="oe-section">
+    <div class="oe-eyebrow">04 — KIND WORDS</div>
+    <h2 class="oe-h">What they say.</h2>
+    <div class="oe-quotes">
+      <div class="oe-quote"><div class="q">"Genuinely changed the trajectory of our company. The cube alone is worth the retainer."</div><div class="a">— J.K., CEO @ Stealth</div></div>
+      <div class="oe-quote"><div class="q">"I have never seen a div move like that. We hired him on the spot."</div><div class="a">— A.R., Head of Design</div></div>
+      <div class="oe-quote"><div class="q">"Increased our conversion by 340%. Possibly. We did not measure."</div><div class="a">— M.L., Growth</div></div>
+    </div>
+  </section>
 
-    <p>Static HTML had its moment. That moment was 1993. Today's reader expects, at minimum, one element rotating in three dimensions, a particle field, a glitching headline, a marquee, and a loading bar that loads nothing. Anything less is contempt for the user.</p>
+  {/* ===================== CTA ===================== */}
+  <section class="oe-cta">
+    <div class="oe-eyebrow">05 — LET'S TALK</div>
+    <h2>Let's build<br/>something magical.</h2>
+    <a href="#" class="btn">START A PROJECT →</a>
+  </section>
 
-    <p>Some argue 14 KB of HTML is "enough." 14 KB is a tomb. Pad your bundle to 4.2 MB so the reader can feel the work going into it.</p>
-
-    <p>Common objections:</p>
-
-    <p><em>"It's slow."</em> The slowness is the point. Loading time is a moment of contemplation.<br/>
-    <em>"I can't read the text."</em> You weren't supposed to read it. You were supposed to feel it.<br/>
-    <em>"My laptop fan turned on."</em> Your laptop is engaged.</p>
-
-    <p>If your site does not autoplay a WebGL scene, register a custom cursor, hijack the scroll wheel, request notification permissions, and animate every paragraph in from a different cardinal direction, you are not building a website. You are publishing a document. Documents are for libraries.</p>
-
-    <p>This post was written in 12 minutes. The cube took six hours. Both convey the same idea. Only one of them is a brand.</p>
+  {/* ===================== FOOTER ===================== */}
+  <div class="oe-foot">
+    HAND-CRAFTED · 8.4 MB OF JAVASCRIPT · 0% READABILITY · © 2026
   </div>
+
 </div>
