@@ -1,76 +1,49 @@
 ---
 title: "Codeforces 1788B: Sum of Two Numbers"
-description: "Splitting a number so two parts have nearly-equal digit sums, in O(log n)."
+description: "Split n so two parts have nearly-equal digit sums."
 date: 2026-05-10
 ---
 
-Here's a Codeforces problem I worked through recently: [1788B, Sum of Two Numbers](https://codeforces.com/problemset/problem/1788/B). It looks like a search problem at first glance, but the right way to look at it makes it almost trivially constructive.
+[Problem link.](https://codeforces.com/problemset/problem/1788/B)
 
 <figure>
-  <img src="/sum-of-two-numbers.png" alt="Codeforces problem statement for 1788B Sum of Two Numbers" />
-  <figcaption>The problem as it appears on Codeforces.</figcaption>
+  <img src="/sum-of-two-numbers.png" alt="Codeforces 1788B problem statement" />
 </figure>
 
-## The problem
+## Problem
 
-Given an integer $n$ with $1 \le n \le 10^9$, find non-negative integers $x, y$ such that
+Given $n \le 10^9$, find $x, y \ge 0$ with $x + y = n$ and $|S(x) - S(y)| \le 1$, where $S$ is digit sum. Up to $10^4$ tests.
 
-$$x + y = n \quad \text{and} \quad |S(x) - S(y)| \le 1,$$
+## Why brute force fails
 
-where $S(\cdot)$ is the digit sum. Up to $10^4$ test cases.
+Looping $x$ from $0$ to $n/2$ is $O(n)$ per test. With $t = 10^4$ and $n = 10^9$, that's $10^{13}$ ops. Need to think in digits, not magnitude.
 
-The problem promises a solution always exists. Our job is to find one.
+## Key fact
 
-## What doesn't work
+Split $n$ digit by digit: pick $x_i, y_i \in [0,9]$ with $x_i + y_i = n_i$. No carries, so
 
-The most direct attempt, looping $x$ from $0$ to $n/2$ and checking the condition, is $O(n)$ per test case. With $n$ up to $10^9$ and $10^4$ test cases, that's $10^{13}$ operations. Not even close.
+$$S(x) + S(y) = S(n).$$
 
-We need something that runs in time related to the number of *digits* of $n$, not its magnitude. That's a strong hint to think digit by digit.
+(Each carry subtracts $9$ from the digit sum total. No carries, no loss.)
 
-## The key insight
+The total is fixed. So the question becomes: how do we split each digit so $S(x)$ and $S(y)$ end up balanced?
 
-Here's the move that unlocks the problem.
+## The split
 
-Suppose I split $n$ digit by digit, that is, for each digit $n_i$ of $n$, I pick $x_i$ and $y_i$ in $[0, 9]$ with $x_i + y_i = n_i$ exactly. Then when I add $x$ and $y$ back together, **there are no carries**. And without carries, digit sums are additive:
+For digit $d$, the best you can do alone is $\lceil d/2 \rceil$ vs $\lfloor d/2 \rfloor$. Even digits split evenly. Odd digits leave a $\pm 1$ imbalance.
 
-$$
-S(x) + S(y) = S(n).
-$$
+If every odd digit's bigger half goes to $x$, the imbalance can hit $10$. Alternate instead: flip which side gets the bigger half each time you see an odd digit. Imbalance stays in $\{-1, 0, 1\}$.
 
-Compare to e.g. $5 + 5 = 10$: $S(5) + S(5) = 10$ but $S(10) = 1$. The carry "ate" a $9$ from the digit sum. Every carry costs you exactly $9$.
+## Trace, $n = 1206$
 
-So if we restrict ourselves to no-carry splits, the *total* $S(x) + S(y)$ is fixed at $S(n)$. The problem collapses to: **partition the digits of $n$ between $x$ and $y$ so the two sides come out balanced.**
+| digit | $x$ | $y$ | sign |
+|------:|----:|----:|:----:|
+| 1 | 1 | 0 | flip |
+| 2 | 11 | 1 | |
+| 0 | 110 | 10 | |
+| 6 | 1103 | 103 | |
 
-## Balancing the split
-
-Since $S(x) + S(y) = S(n)$, the condition $|S(x) - S(y)| \le 1$ becomes:
-
-- If $S(n)$ is even: we want $S(x) = S(y) = S(n)/2$.
-- If $S(n)$ is odd: we want the sums to differ by exactly $1$.
-
-For each digit $n_i$ of $n$, we have full freedom to send $\lceil n_i / 2 \rceil$ to one side and $\lfloor n_i / 2 \rfloor$ to the other. If $n_i$ is even, both halves are equal and the digit contributes $0$ to the imbalance. If $n_i$ is odd, one side gets $1$ more than the other.
-
-So the imbalance $S(x) - S(y)$ is determined entirely by **how we orient the odd digits**. If we always send the bigger half to $x$, the imbalance equals the number of odd digits, which could be as large as $10$. Bad.
-
-The fix is the obvious one: **alternate**. Each time we hit an odd digit, flip which side gets the bigger half. Then the running imbalance stays in $\{-1, 0, +1\}$ forever, regardless of how many odd digits there are.
-
-## The construction
-
-Walk the digits of $n$ from left to right. Maintain a sign flag. For each digit $d$:
-
-- If $d$ is even: give $d/2$ to both $x$ and $y$.
-- If $d$ is odd: give $\lceil d/2 \rceil$ to whichever side the sign points to, $\lfloor d/2 \rfloor$ to the other, then flip the sign.
-
-That's the whole algorithm. Let me trace it on $n = 1206$:
-
-| digit | parity | $x$ so far | $y$ so far | sign |
-|-------|--------|-----------:|-----------:|------|
-|   1   |  odd   |          1 |          0 |  −   |
-|   2   |  even  |         11 |          1 |  −   |
-|   0   |  even  |        110 |         10 |  −   |
-|   6   |  even  |       1103 |        103 |  −   |
-
-Result: $x = 1103$, $y = 103$. Check: $1103 + 103 = 1206$ ✓, and $S(1103) = 5$, $S(103) = 4$. Differ by $1$. ✓
+$1103 + 103 = 1206$. $S(1103) = 5$, $S(103) = 4$.
 
 ## Code
 
@@ -79,51 +52,23 @@ Result: $x = 1103$, $y = 103$. Check: $1103 + 103 = 1206$ ✓, and $S(1103) = 5$
 using namespace std;
 
 int main() {
-    int t;
-    scanf("%d", &t);
+    int t; scanf("%d", &t);
     while (t--) {
-        long long n;
-        scanf("%lld", &n);
+        long long n; scanf("%lld", &n);
         string s = to_string(n);
-
         long long x = 0, y = 0;
-        int sign = 1;  // +1 means next odd digit's bigger half goes to x
-
+        int sign = 1;
         for (char c : s) {
-            int d = c - '0';
-            int big = (d + 1) / 2;
-            int small = d / 2;
-            if (d % 2 == 0) {
-                x = x * 10 + big;
-                y = y * 10 + small;
-            } else if (sign == 1) {
-                x = x * 10 + big;
-                y = y * 10 + small;
-                sign = -1;
-            } else {
-                x = x * 10 + small;
-                y = y * 10 + big;
-                sign = 1;
-            }
+            int d = c - '0', big = (d+1)/2, small = d/2;
+            if (d % 2 == 0) { x = x*10+big; y = y*10+small; }
+            else if (sign == 1) { x = x*10+big; y = y*10+small; sign = -1; }
+            else { x = x*10+small; y = y*10+big; sign = 1; }
         }
-
         printf("%lld %lld\n", x, y);
     }
 }
 ```
 
-Reading $n$ as a string is the right move here. The algorithm is fundamentally about digits, and `to_string` makes the most-significant-first iteration trivial.
-
 ## Complexity
 
-Let $d = \lfloor \log_{10} n \rfloor + 1$ be the number of digits. Per test case we do $O(d)$ work, so the total is
-
-$$
-O(t \cdot \log_{10} n).
-$$
-
-For $t = 10^4$ and $n \le 10^9$ this is at most $10^5$ operations. Effectively instant.
-
-## Why I like this problem
-
-It rewards the right *frame* over cleverness. The brute-force search is hopeless and no amount of optimization saves it. Meanwhile, recognizing that no-carry splits preserve the digit sum turns the whole thing into a one-pass construction. That kind of "change the question, not the search" move is, I think, the most useful skill competitive programming teaches.
+$O(\log n)$ per test, $O(t \log n)$ total. About $10^5$ ops worst case.
