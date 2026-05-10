@@ -10,11 +10,14 @@ const posts = (await getCollection('posts', ({ data }) => !data.draft))
     <p class="intro">Interesting Stuff!!!</p>
     <ul class="post-list">
       {posts.map((p) => (
-        <li>
+        <li class={p.data.thumbnail ? 'has-thumb' : ''}>
           <a href={`/posts/${p.slug}/`}>
-            <div class="title">{p.data.title}</div>
-            {p.data.description && <div class="desc">{p.data.description}</div>}
-            <div class="date">{p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            {p.data.thumbnail && <img class="thumb" src={p.data.thumbnail} alt="" />}
+            <div class="post-text">
+              <div class="title">{p.data.title}</div>
+              {p.data.description && <div class="desc">{p.data.description}</div>}
+              <div class="date">{p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            </div>
           </a>
         </li>
       ))}

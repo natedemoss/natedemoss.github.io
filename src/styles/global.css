@@ -154,6 +154,20 @@ article figcaption {
   border: none;
   display: block;
 }
+.post-list li.has-thumb a {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+.post-list .thumb {
+  width: 110px;
+  height: auto;
+  flex-shrink: 0;
+  background: #f7f7f4;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+.post-list .post-text { flex: 1; min-width: 0; }
 .post-list .title {
   font-size: 1.25rem;
   font-weight: 600;
