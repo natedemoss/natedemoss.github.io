@@ -1,36 +1,43 @@
 ---
-title: "Codeforces 1788B — Sum of Two Numbers"
+title: "Codeforces 1788B: Sum of Two Numbers"
 description: "Splitting a number so two parts have nearly-equal digit sums, in O(log n)."
 date: 2026-05-10
 ---
 
-Here's a Codeforces problem I worked through recently. It looks like a search problem at first glance, but the right way to look at it makes it almost trivially constructive.
+Here's a Codeforces problem I worked through recently: [1788B, Sum of Two Numbers](https://codeforces.com/problemset/problem/1788/B). It looks like a search problem at first glance, but the right way to look at it makes it almost trivially constructive.
+
+<figure>
+  <img src="/sum-of-two-numbers.png" alt="Codeforces problem statement for 1788B Sum of Two Numbers" />
+  <figcaption>The problem as it appears on Codeforces.</figcaption>
+</figure>
 
 ## The problem
 
-> Given an integer $n$ with $1 \le n \le 10^9$, find non-negative integers $x, y$ such that
-> $$x + y = n \quad \text{and} \quad |S(x) - S(y)| \le 1,$$
-> where $S(\cdot)$ is the digit sum. Up to $10^4$ test cases.
+Given an integer $n$ with $1 \le n \le 10^9$, find non-negative integers $x, y$ such that
+
+$$x + y = n \quad \text{and} \quad |S(x) - S(y)| \le 1,$$
+
+where $S(\cdot)$ is the digit sum. Up to $10^4$ test cases.
 
 The problem promises a solution always exists. Our job is to find one.
 
 ## What doesn't work
 
-The most direct attempt — loop $x$ from $0$ to $n/2$, check the condition — is $O(n)$ per test case. With $n$ up to $10^9$ and $10^4$ test cases, that's $10^{13}$ operations. Not even close.
+The most direct attempt, looping $x$ from $0$ to $n/2$ and checking the condition, is $O(n)$ per test case. With $n$ up to $10^9$ and $10^4$ test cases, that's $10^{13}$ operations. Not even close.
 
-We need something that runs in time related to the number of *digits* of $n$, not its magnitude. That's a strong hint to think digit-by-digit.
+We need something that runs in time related to the number of *digits* of $n$, not its magnitude. That's a strong hint to think digit by digit.
 
 ## The key insight
 
 Here's the move that unlocks the problem.
 
-Suppose I split $n$ "digit-by-digit" — that is, for each digit $n_i$ of $n$, I pick $x_i$ and $y_i$ in $[0, 9]$ with $x_i + y_i = n_i$ exactly. Then when I add $x$ and $y$ back together, **there are no carries**. And without carries, digit sums are additive:
+Suppose I split $n$ digit by digit, that is, for each digit $n_i$ of $n$, I pick $x_i$ and $y_i$ in $[0, 9]$ with $x_i + y_i = n_i$ exactly. Then when I add $x$ and $y$ back together, **there are no carries**. And without carries, digit sums are additive:
 
 $$
 S(x) + S(y) = S(n).
 $$
 
-(Compare to e.g. $5 + 5 = 10$: $S(5) + S(5) = 10$ but $S(10) = 1$. The carry "ate" a $9$ from the digit sum. Every carry costs you exactly $9$.)
+Compare to e.g. $5 + 5 = 10$: $S(5) + S(5) = 10$ but $S(10) = 1$. The carry "ate" a $9$ from the digit sum. Every carry costs you exactly $9$.
 
 So if we restrict ourselves to no-carry splits, the *total* $S(x) + S(y)$ is fixed at $S(n)$. The problem collapses to: **partition the digits of $n$ between $x$ and $y$ so the two sides come out balanced.**
 
@@ -43,7 +50,7 @@ Since $S(x) + S(y) = S(n)$, the condition $|S(x) - S(y)| \le 1$ becomes:
 
 For each digit $n_i$ of $n$, we have full freedom to send $\lceil n_i / 2 \rceil$ to one side and $\lfloor n_i / 2 \rfloor$ to the other. If $n_i$ is even, both halves are equal and the digit contributes $0$ to the imbalance. If $n_i$ is odd, one side gets $1$ more than the other.
 
-So the imbalance $S(x) - S(y)$ is determined entirely by **how we orient the odd digits**. If we always send the bigger half to $x$, the imbalance equals the number of odd digits — which could be as large as $10$. Bad.
+So the imbalance $S(x) - S(y)$ is determined entirely by **how we orient the odd digits**. If we always send the bigger half to $x$, the imbalance equals the number of odd digits, which could be as large as $10$. Bad.
 
 The fix is the obvious one: **alternate**. Each time we hit an odd digit, flip which side gets the bigger half. Then the running imbalance stays in $\{-1, 0, +1\}$ forever, regardless of how many odd digits there are.
 
@@ -105,7 +112,7 @@ int main() {
 }
 ```
 
-Reading $n$ as a string is the right move here — the algorithm is fundamentally about digits, and `to_string` makes the most-significant-first iteration trivial.
+Reading $n$ as a string is the right move here. The algorithm is fundamentally about digits, and `to_string` makes the most-significant-first iteration trivial.
 
 ## Complexity
 
@@ -119,4 +126,4 @@ For $t = 10^4$ and $n \le 10^9$ this is at most $10^5$ operations. Effectively i
 
 ## Why I like this problem
 
-It rewards the right *frame* over cleverness. The brute-force search is hopeless and no amount of optimization saves it; meanwhile, recognizing that no-carry splits preserve the digit sum turns the whole thing into a one-pass construction. That kind of "change the question, not the search" move is, I think, the most useful skill competitive programming teaches.
+It rewards the right *frame* over cleverness. The brute-force search is hopeless and no amount of optimization saves it. Meanwhile, recognizing that no-carry splits preserve the digit sum turns the whole thing into a one-pass construction. That kind of "change the question, not the search" move is, I think, the most useful skill competitive programming teaches.
