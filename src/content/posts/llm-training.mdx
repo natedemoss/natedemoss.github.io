@@ -1,0 +1,115 @@
+---
+title: "Codeforces 2181L: LLM Training"
+description: "Train an LLM analytically. The optimal model is the empirical distribution; computing it fast needs a suffix automaton."
+date: 2026-05-11
+thumbnail: "/codeforces.png"
+---
+
+[Problem link.](https://codeforces.com/problemset/problem/2181/L)
+
+<figure>
+  <img src="/2181l.png" alt="Codeforces 2181L LLM Training problem statement" />
+</figure>
+
+## Setup
+
+Dataset: $n$ texts $t_1, \ldots, t_n$. Each text marks some positions as LLM-generated (set $L_i$). For each $k$ from $0$ to $M-1$ where $M = \max_i |t_i|$, find the minimum cross-entropy loss
+
+$$\mathcal{L}_k = \sum_{i=1}^{n} \sum_{j \in L_i} -\log_2 P_k\big(t_i[j] \mid t_i[\max(1, j-k) .. j-1]\big)$$
+
+over every valid context-$k$ probabilistic model $P_k$. Constraints: $\sum |t_i| \le 3 \cdot 10^5$.
+
+## The model is a lookup table
+
+There is no training. $P_k(\cdot \mid w)$ is a free distribution per context $w$, so we minimize each context independently. For context $w$ with next-token counts $c_w(x)$ summing to $C_w$, minimize
+
+$$\sum_x -c_w(x) \log_2 p_x \quad \text{s.t.} \quad \sum_x p_x = 1.$$
+
+Gibbs gives $p_x = c_w(x) / C_w$ with optimum value $C_w \log_2 C_w - \sum_x c_w(x) \log_2 c_w(x)$. So
+
+$$\mathcal{L}_k = \sum_{w} \Big( C_w \log_2 C_w - \sum_x c_w(x) \log_2 c_w(x) \Big),$$
+
+summed over distinct length-$\min(j-1, k)$ contexts that precede an L-position. The problem reduces to: for every $k$, group L-positions by their length-$k$ context, fast.
+
+## Trie blows up
+
+A trie of reversed prefixes ending at L-positions has up to $\Theta(M^2) \approx 9 \cdot 10^{10}$ nodes when one text is $3 \cdot 10^5$ tokens long. Dead.
+
+## Generalized suffix automaton
+
+Build a generalized SAM over all texts (integer alphabet, `map<int,int>` per state). It has $O(N)$ states. For each L-position $(i, j)$ identify the state $s^*_{i,j}$ representing the full prefix $t_i[1..j-1]$.
+
+In the SAM's suffix-link tree, state $s$ holds strings of lengths $[\mathrm{minlen}(s), \mathrm{maxlen}(s)]$. The length-$k$ context of $(i, j)$ for $k \le j-1$ is a suffix of its prefix, and that suffix lives in the unique ancestor of $s^*_{i,j}$ whose length range covers $k$.
+
+For a fixed state $s$ with $a = \mathrm{minlen}(s)$, $b = \mathrm{maxlen}(s)$:
+
+- $k \in [a, b]$: every L-position in $s$'s suffix-link subtree lands at $s$. Contribute the entropy of all their next-tokens.
+- $k > b$: only L-positions whose $s^* = s$ stay (descendants moved deeper). Contribute the entropy over just those.
+
+Both are interval updates on the answer array. Difference array, prefix-sum at the end.
+
+## Subtree entropies via small-to-large
+
+For each state we need $\sum_x f(c(x))$ where $f(c) = c \log_2 c$. Walk the suffix-link tree post-order, merging child next-token count maps small-to-large into the parent. Maintain $\sum_x f(c(x))$ incrementally: when count of $x$ changes from $a$ to $a + \Delta$, add $f(a + \Delta) - f(a)$.
+
+Each token participates in $O(\log N)$ merges, total $O(N \log^2 N)$.
+
+## Code, the part that matters
+
+After computing `E_sub[s]` (entropy over the subtree) and `E_own[s]` (entropy over just `s`'s own L-positions), the answer falls out of two interval adds per state:
+
+```cpp
+vector<double> diff(M + 1, 0.0);
+for (int s = 0; s < S; ++s) {
+    int lo = sam.minlen(s), hi = sam.len(s);
+    if (lo > M - 1) continue;
+    if (hi > M - 1) hi = M - 1;
+    if (E_sub[s] != 0.0) {
+        diff[lo]      += E_sub[s];
+        diff[hi + 1]  -= E_sub[s];
+    }
+    int olo = sam.len(s) + 1, ohi = M - 1;
+    if (E_own[s] != 0.0 && olo <= ohi) {
+        diff[olo]     += E_own[s];
+        diff[ohi + 1] -= E_own[s];
+    }
+}
+
+double run = 0.0;
+for (int k = 0; k < M; ++k) {
+    run += diff[k];
+    cout << max(0.0, run) << "\n";
+}
+```
+
+The small-to-large pass that produces `E_sub`:
+
+```cpp
+for (int idx = (int)order.size() - 1; idx >= 0; --idx) {
+    int s = order[idx];
+    auto* mp = new unordered_map<int,int>();
+    double sf = 0.0;
+    long long tc = 0;
+    for (int x : own[s]) {
+        auto it = mp->find(x);
+        if (it == mp->end()) { (*mp)[x] = 1; tc++; }
+        else { int old = it->second; it->second = old + 1; sf += f_of(old+1) - f_of(old); tc++; }
+    }
+    for (int c : children[s]) {
+        auto* cmp = sub[c];
+        if (cmp->size() > mp->size()) { swap(mp, cmp); swap(sf, sumF[c]); swap(tc, totC[c]); }
+        for (auto& kv : *cmp) {
+            auto it = mp->find(kv.first);
+            if (it == mp->end()) { (*mp)[kv.first] = kv.second; sf += f_of(kv.second); }
+            else { int old = it->second, neu = old + kv.second; it->second = neu; sf += f_of(neu) - f_of(old); }
+        }
+        tc += totC[c]; delete cmp;
+    }
+    sub[s] = mp; sumF[s] = sf; totC[s] = tc;
+    E_sub[s] = max(0.0, f_of(tc) - sf);
+}
+```
+
+## Complexity
+
+$O(N \log^2 N)$ time, $O(N)$ space in SAM states. Worst case ($N = 3 \cdot 10^5$, single text, binary alphabet) runs in about 1 second; memory peak around 150 MB.
