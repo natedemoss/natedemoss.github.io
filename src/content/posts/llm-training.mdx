@@ -388,23 +388,12 @@ int main() {
 
 $O(N \log^2 N)$ time, $O(N)$ space in SAM states. Worst case ($N = 3 \cdot 10^5$, single text, binary alphabet) runs in about 1 second; memory peak around 150 MB.
 
-## Why this problem is interesting
-
-The framing is a magic trick. It opens with "train an LLM and find the minimum loss" and looks like an ML problem. There is no training. $P_k$ is a free lookup table, so the minimum is the closed-form Gibbs distribution and the entire optimization vanishes in one line. What you are left with is a string-algorithm problem wearing an ML costume.
-
-The other thing I like is that the right solution sits at the intersection of three completely different ideas:
-
-- Information theory (cross-entropy minimum is the empirical distribution).
-- Suffix automata (the $\Theta(M^2)$ trie collapses into $O(N)$ states because most contexts are equivalent).
-- Small-to-large merging on the suffix-link tree (so we never rebuild a count map from scratch).
-
-None of them alone solve it. You need to recognize that the problem is asking for entropies of context-grouped tokens, then realize that "context" is just "substring ending at position $j-1$", which is exactly what a SAM enumerates compactly.
 
 ## Thought process
 
 What I actually did, in order:
 
-1. Stared at the loss formula. Spent a while just unpacking $t_i[\max(1, j-k) .. j-1]$ and convincing myself the $\max$ was only there to handle the start of the text.
+1. Stared at the loss formula, and wanted to quit.. Spent a while just unpacking $t_i[\max(1, j-k) .. j-1]$ and convincing myself the $\max$ was only there to handle the start of the text.
 2. Tried to picture "training" $P_k$. Got nowhere until I noticed $P_k$ is a totally free distribution per context. At that point the problem stops being optimization and becomes: pick the best distribution per context independently. Gibbs gives the empirical distribution.
 3. Sanity-checked $k = 0$: all L-positions share the empty context, so $\mathcal{L}_0 = C \log_2 C - \sum_x c(x) \log_2 c(x)$, which is just $C$ times the empirical entropy. Matched the first sample.
 4. Wrote out a brute force: for each $k$, group L-positions by their length-$k$ context, sum entropies. $O(N \cdot M)$. Way too slow.
@@ -413,4 +402,4 @@ What I actually did, in order:
 7. Once I had "state $s$ contributes $E_\text{sub}$ on $[\mathrm{minlen}, \mathrm{maxlen}]$ and $E_\text{own}$ above", the rest was bookkeeping: difference array for the range updates, small-to-large on the suffix-link tree to aggregate the next-token counts.
 8. Spent the longest debugging floating-point: $f(C) - \sum f(c(x))$ can dip slightly below zero from rounding, and a negative entropy crashed my checker. Clamped at zero.
 
-The big lesson for me: when a problem hands you an optimization over a free function space, check if the optimum has a closed form before doing anything else. If it does, the problem is no longer the problem you thought it was.
+
