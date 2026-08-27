@@ -13,6 +13,10 @@
 <header>
   <h1>Nathan DeMoss</h1>
   <p class="tagline">Raleigh, NC</p>
+  <figure class="scope">
+    <canvas id="scope" aria-hidden="true"></canvas>
+    <figcaption>Lissajous curve, <span id="scope-ratio">3:2</span>. Move your cursor over it.</figcaption>
+  </figure>
 </header>
 
 <main>
@@ -69,6 +73,11 @@
   <h2>Contributing to</h2>
   <ul class="projects">
     <li>
+      <a href="https://github.com/NVIDIA/OpenShell">OpenShell</a>
+      <span class="meta">NVIDIA</span>
+      <p>Contributor and maintainer. Safe, private runtime for autonomous agents.</p>
+    </li>
+    <li>
       <a href="https://github.com/ggml-org/llama.vim">llama.vim</a>
       <span class="meta">ggml-org</span>
       <p>Vim plugin for LLM-assisted completion.</p>
@@ -91,6 +100,8 @@
 <footer>
   <p>&copy; 2026</p>
 </footer>
+
+<script src="/scope.js" defer></script>
 
 </body>
 </html>
