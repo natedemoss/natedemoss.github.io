@@ -14,8 +14,14 @@
   <h1>Nathan DeMoss</h1>
   <p class="tagline">Raleigh, NC</p>
   <figure class="scope">
-    <canvas id="scope" aria-hidden="true"></canvas>
-    <figcaption>Lissajous curve, <span id="scope-ratio">3:2</span>. Move your cursor over it.</figcaption>
+    <div class="scope-frame">
+      <canvas id="wave" aria-hidden="true"></canvas>
+      <canvas id="spectrum" aria-hidden="true"></canvas>
+    </div>
+    <figcaption>
+      Draw on the wave. The bars are its spectrum, peak at
+      <span id="fft-peak">k=3</span>. Double-click to reset.
+    </figcaption>
   </figure>
 </header>
 
@@ -27,6 +33,7 @@
     interested in ece and physics.
   </p>
   <p>open source is also pretty cool.</p>
+  <p class="activity" id="activity" hidden></p>
 </section>
 
 <section>
@@ -101,7 +108,8 @@
   <p>&copy; 2026</p>
 </footer>
 
-<script src="/scope.js" defer></script>
+<script src="/fft.js" defer></script>
+<script src="/activity.js" defer></script>
 
 </body>
 </html>
