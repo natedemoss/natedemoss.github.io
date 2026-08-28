@@ -149,17 +149,12 @@ footer p {
   touch-action: none;
 }
 
-#bifurcation {
-  height: 150px;
-  cursor: col-resize;
+#gates {
+  aspect-ratio: 600 / 180;
+  cursor: pointer;
 }
 
-#orbit {
-  height: 128px;
-  margin-top: 0.7rem;
-}
-
-#lm-readout {
+#gate-readout {
   display: block;
   color: var(--fg);
 }

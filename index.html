@@ -15,13 +15,11 @@
   <p class="tagline">Raleigh, NC</p>
   <figure class="scope">
     <div class="scope-frame">
-      <canvas id="bifurcation" aria-hidden="true"></canvas>
-      <canvas id="orbit" aria-hidden="true"></canvas>
+      <canvas id="gates" aria-hidden="true"></canvas>
     </div>
     <figcaption>
-      x &rarr; rx(1&minus;x), for r from 2.8 to 4. Move across the diagram to
-      pick an r; below is the orbit it settles into.
-      <span id="lm-readout">r = 3.5000 &middot; period 4</span>
+      A half adder. Click A or B; the lit wires are carrying a 1.
+      <span id="gate-readout">0 + 0 = 00</span>
     </figcaption>
   </figure>
 </header>
@@ -110,7 +108,7 @@
   <p>&copy; 2026</p>
 </footer>
 
-<script src="/logistic.js" defer></script>
+<script src="/gates.js" defer></script>
 <script src="/activity.js" defer></script>
 
 </body>
