@@ -149,14 +149,9 @@ footer p {
   touch-action: none;
 }
 
-#gates {
-  aspect-ratio: 600 / 180;
-  cursor: pointer;
-}
-
-#gate-readout {
-  display: block;
-  color: var(--fg);
+#pins {
+  height: 190px;
+  cursor: crosshair;
 }
 
 .scope figcaption {
