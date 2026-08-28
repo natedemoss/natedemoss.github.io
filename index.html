@@ -15,12 +15,13 @@
   <p class="tagline">Raleigh, NC</p>
   <figure class="scope">
     <div class="scope-frame">
-      <canvas id="wave" aria-hidden="true"></canvas>
-      <canvas id="spectrum" aria-hidden="true"></canvas>
+      <canvas id="bifurcation" aria-hidden="true"></canvas>
+      <canvas id="orbit" aria-hidden="true"></canvas>
     </div>
     <figcaption>
-      Draw on the wave. The bars are its spectrum, peak at
-      <span id="fft-peak">k=3</span>. Double-click to reset.
+      x &rarr; rx(1&minus;x), for r from 2.8 to 4. Move across the diagram to
+      pick an r; below is the orbit it settles into.
+      <span id="lm-readout">r = 3.5000 &middot; period 4</span>
     </figcaption>
   </figure>
 </header>
@@ -109,7 +110,7 @@
   <p>&copy; 2026</p>
 </footer>
 
-<script src="/fft.js" defer></script>
+<script src="/logistic.js" defer></script>
 <script src="/activity.js" defer></script>
 
 </body>

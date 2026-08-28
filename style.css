@@ -149,14 +149,19 @@ footer p {
   touch-action: none;
 }
 
-#wave {
-  height: 120px;
-  cursor: crosshair;
+#bifurcation {
+  height: 150px;
+  cursor: col-resize;
 }
 
-#spectrum {
-  height: 56px;
+#orbit {
+  height: 128px;
   margin-top: 0.7rem;
+}
+
+#lm-readout {
+  display: block;
+  color: var(--fg);
 }
 
 .scope figcaption {
