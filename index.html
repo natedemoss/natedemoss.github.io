@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nathan DeMoss</title>
-<meta name="description" content="Nathan DeMoss. C++ and machine learning. Raleigh, NC.">
+<meta name="description" content="Nathan DeMoss. C++, machine learning and inference. Raleigh, NC.">
 <meta name="theme-color" content="#fffffe">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
@@ -22,9 +22,9 @@
 
 <div class="titleblock">
   <h1>Nathan DeMoss</h1>
-  <div class="affil">Cary Academy &middot; Raleigh, North Carolina</div>
+  <div class="affil">C++ &middot; ML inference &middot; Raleigh, NC</div>
   <div class="contact">
-    <a href="mailto:nate@natedemoss.dev">nate@natedemoss.dev</a><span class="sep">&middot;</span><a href="https://github.com/natedemoss">github</a><span class="sep">&middot;</span><a href="https://x.com/ndemoss28">x</a><span class="sep">&middot;</span><a href="https://www.linkedin.com/in/natedemoss/">linkedin</a>
+    <a href="mailto:ndemoss28@gmail.com">ndemoss28@gmail.com</a><span class="sep">&middot;</span><a href="https://github.com/natedemoss">github</a><span class="sep">&middot;</span><a href="https://x.com/ndemoss28">x</a><span class="sep">&middot;</span><a href="https://www.linkedin.com/in/natedemoss/">linkedin</a>
   </div>
 </div>
 
@@ -33,73 +33,53 @@
 <div class="abstract">
   <h2>Abstract</h2>
   <p>
-    I work on <strong>C++</strong> and <strong>machine learning</strong>:
-    the systems underneath models, and the models themselves. I contribute
-    to open-source agent and inference infrastructure, build small tools
-    for evaluating and training models, and do competitive programming.
-    The projects are <a href="/projects.html">here</a>; the
-    writing is <a href="/writing/">here</a>.
+    I write <strong>C++</strong> and work on <strong>ML inference</strong>:
+    making models run in real time on the hardware they ship on. Currently
+    robot foundation models at <a href="https://www.nilabs.dev">NiLabs</a>.
   </p>
 </div>
 
 <section id="experience">
   <h2>Experience</h2>
-  <ul class="entries">
-    <li>
-      <div class="row">
-        <span class="what"><a href="https://github.com/NVIDIA/OpenShell">NVIDIA OpenShell</a></span>
-        <span class="when">v0.1.0</span>
-      </div>
-      <div class="role">Contributor</div>
-      <div class="desc"><p>Safe, private runtime for autonomous agents. Contributor to the v0.1.0 release.</p></div>
-    </li>
-    <li>
-      <div class="row">
-        <span class="what"><a href="https://github.com/vllm-project/vime">vLLM &mdash; vime</a></span>
-        <span class="when">open source</span>
-      </div>
-      <div class="role">Contributor</div>
-      <div class="desc"><p>Post-training framework from the vLLM project.</p></div>
-    </li>
-    <li>
-      <div class="row">
-        <span class="what"><a href="https://github.com/openclaw/openclaw-enterprise">OpenClaw Enterprise</a></span>
-        <span class="when">open source</span>
-      </div>
-      <div class="role">Contributor</div>
-      <div class="desc"><p>Orchestration suite for OpenClaw agents.</p></div>
-    </li>
-    <li>
-      <div class="row">
-        <span class="what"><a href="https://github.com/NiLabs-Org">NiLabs</a></span>
-        <span class="when">ongoing</span>
-      </div>
-      <div class="desc"><p>Open-source ML tooling: <a href="https://github.com/NiLabs-Org/conform">conform</a>
-        (do inference engines actually agree?), <a href="https://github.com/NiLabs-Org/ladder">ladder</a>
-        (small models fine-tuned for competitive programming), and
-        <a href="https://github.com/NiLabs-Org/cf-recommend">cf-recommend</a>.</p></div>
-    </li>
-    <li>
-      <div class="row">
-        <span class="what"><a href="https://www.caryacademy.org/">Cary Academy</a></span>
-        <span class="when">Raleigh, NC</span>
-      </div>
-      <div class="role">Student</div>
-    </li>
-  </ul>
+  <dl class="cv">
+    <dt>present</dt>
+    <dd><b><a href="https://www.nilabs.dev">NiLabs</a></b>, <i>Member of Technical Staff.</i>
+      Real-time inference for vision-language-action models on robot chips
+      (<a href="https://github.com/NiLabs-Org/grail" class="tt">grail</a>). With two Georgia Tech student founders.</dd>
+    <dt>v0.1.0</dt>
+    <dd><b><a href="https://github.com/ai-openshell/openshell">NVIDIA OpenShell</a></b>, <i>contributor.</i>
+      Safe, private runtime for autonomous agents. CLI fixes: out-of-range durations, credential updates (<a href="https://github.com/ai-openshell/openshell/pull/3044">#3044</a>, <a href="https://github.com/ai-openshell/openshell/pull/3109">#3109</a>).</dd>
+    <dt>OSS</dt>
+    <dd><b><a href="https://github.com/ggml-org/llama.vim">ggml-org llama.vim</a></b>, <i>contributor.</i>
+      FIM fixes to the Vim client for llama.cpp.</dd>
+    <dt>OSS</dt>
+    <dd><b><a href="https://github.com/vllm-project/vime">vLLM vime</a></b>, <i>contributor.</i> Post-training framework.</dd>
+    <dt>OSS</dt>
+    <dd><b><a href="https://github.com/openclaw/openclaw-enterprise">OpenClaw Enterprise</a></b>, <i>contributor.</i> Agent orchestration.</dd>
+    <dt>student</dt>
+    <dd><b><a href="https://www.caryacademy.org/">Cary Academy</a></b>, Raleigh, NC.</dd>
+  </dl>
 </section>
 
 <section id="honors">
   <h2>Honors</h2>
-  <ul class="entries">
-    <li>
-      <div class="row">
-        <span class="what">USAYPT, 4th place nationally</span>
-        <span class="when">2025</span>
-      </div>
-      <div class="desc"><p>U.S. Association for Young Physicists Tournaments<sup class="fn"><a href="#fn1" id="fnref1">1</a></sup>.</p></div>
-    </li>
-  </ul>
+  <dl class="cv">
+    <dt>2026</dt>
+    <dd><b>4th nationally</b>, <abbr title="U.S. Association for Young Physicists Tournaments">USAYPT</abbr> (physics).</dd>
+  </dl>
+</section>
+
+<section id="selected">
+  <h2>Selected projects</h2>
+  <dl class="cv">
+    <dt>Python</dt>
+    <dd><b><a href="https://github.com/natedemoss/conform">conform</a></b>. Checks whether inference engines actually agree.</dd>
+    <dt>Python</dt>
+    <dd><b><a href="https://github.com/natedemoss/ladder">ladder</a></b>. Small models fine-tuned for competitive programming.</dd>
+    <dt>C++</dt>
+    <dd><b><a href="https://github.com/natedemoss/cf-recommend">cf-recommend</a></b>. Picks your next Codeforces problem.</dd>
+  </dl>
+  <p class="more"><a href="/projects.html">All projects &rarr;</a></p>
 </section>
 
 <section id="activity">
@@ -113,35 +93,24 @@
         <tr><td colspan="3" class="placeholder">Fetching from the GitHub API&hellip;</td></tr>
       </tbody>
     </table>
-    <figcaption>Latest public events on <a href="https://github.com/natedemoss">github.com/natedemoss</a>, fetched live.</figcaption>
+    <figcaption>Live from <a href="https://github.com/natedemoss">github.com/natedemoss</a>.</figcaption>
   </figure>
 </section>
 
 <section id="writing">
   <h2>Writing</h2>
-  <ol class="toc">
-    <li>
-      <div class="line"><span class="title"><a href="/writing/llm-training.html">The hardest problem I&rsquo;ve attempted</a></span><span class="dots"></span><span class="date">May 2026</span></div>
-      <div class="blurb">Codeforces 2181L. The optimal model is the empirical distribution; computing it fast needs a suffix automaton.</div>
-    </li>
-    <li>
-      <div class="line"><span class="title"><a href="/writing/sum-of-two-numbers.html">Codeforces 1788B: Sum of Two Numbers</a></span><span class="dots"></span><span class="date">May 2026</span></div>
-      <div class="blurb">Split <i>n</i> so the two parts have nearly equal digit sums.</div>
-    </li>
-  </ol>
-  <p class="note">All posts: <a href="/writing/">/writing</a>.</p>
+  <dl class="cv">
+    <dt>Nov 2026</dt>
+    <dd><b><a href="/writing/inference-is-a-memory-problem.html">Inference is a memory problem</a></b>. One roofline, one bound on tokens/s, and why every optimization reads fewer bytes.</dd>
+    <dt>May 2026</dt>
+    <dd><b><a href="/writing/sum-of-two-numbers.html">Codeforces 1788B: Sum of Two Numbers</a></b>. Split <i>n</i> so both parts have nearly equal digit sums.</dd>
+  </dl>
 </section>
 
 <section id="fun">
-  <h2>Outside of work</h2>
-  <p>Poker (decent at it), chess, and video games.</p>
+  <h2>Otherwise</h2>
+  <p class="flat">Poker, chess, video games.</p>
 </section>
-
-<div class="footnotes">
-  <ol>
-    <li id="fn1"><span class="mark">1</span>A team tournament in which students research open-ended physics problems and defend their solutions against other teams. <a href="#fnref1" aria-label="Back to text">&#8617;</a></li>
-  </ol>
-</div>
 
 </main>
 

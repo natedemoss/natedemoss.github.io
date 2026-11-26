@@ -6,7 +6,7 @@
   if (!body || !window.fetch) return;
 
   var USER = 'natedemoss';
-  var MAX_ROWS = 6;
+  var MAX_ROWS = 5;
 
   function ago(iso) {
     var secs = (Date.now() - new Date(iso).getTime()) / 1000;

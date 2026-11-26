@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inference is a memory problem &mdash; Nathan DeMoss</title>
+<meta name="description" content="Generating tokens one at a time is bound by memory bandwidth, not compute. One roofline and one formula explain batching, quantization, GQA, MoE and speculative decoding.">
+<meta name="theme-color" content="#fffffe">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="/math.js"></script>
+</head>
+<body>
+
+<header class="runhead">
+  <span class="left">N. DeMoss &mdash; Writing</span>
+  <nav aria-label="Site">
+    <a href="/">Home</a>
+    <a href="/projects.html">Projects</a>
+    <a href="/writing/" aria-current="page">Writing</a>
+  </nav>
+</header>
+
+<div class="titleblock">
+  <h1>Inference is a memory problem</h1>
+  <div class="author">Nathan DeMoss</div>
+  <div class="date">November 1, 2026</div>
+</div>
+
+<main>
+<div class="abstract">
+  <h2>Abstract</h2>
+  <p>When a language model generates text one token at a time, the GPU spends
+  almost all of its time waiting on memory, not doing arithmetic. This note
+  derives that from a single model of hardware, the roofline, and turns it
+  into one inequality that bounds tokens per second on any chip. Nearly every
+  inference optimization in use today then reads as one of two moves: read
+  fewer bytes per token, or produce more tokens per byte read.</p>
+</div>
+
+<article>
+
+<h2>The roofline</h2>
+
+<p>Describe a chip by two numbers: peak compute $P$ in FLOP/s, and memory
+bandwidth $B$ in bytes/s. Describe a workload by its <em>arithmetic
+intensity</em>
+$$I = \frac{\text{FLOPs performed}}{\text{bytes moved to and from memory}}.$$
+In one second the chip can move at most $B$ bytes, which feeds at most $I B$
+FLOPs, and it can never exceed $P$. So the attainable throughput is</p>
+
+$$\text{FLOP/s} \;\le\; \min(P,\; I \cdot B).$$
+
+<p>This is the roofline [1]. Below the <em>ridge point</em> $I^\star = P/B$ a
+workload is <strong>memory-bound</strong>: a faster ALU would not help, only
+fewer bytes or more bandwidth would. Above it, the workload is
+<strong>compute-bound</strong>. For an NVIDIA H100 SXM, with
+$P \approx 989$ TFLOP/s of dense BF16 and $B \approx 3.35$ TB/s of HBM3
+bandwidth [2],
+$$I^\star \approx \frac{989 \times 10^{12}}{3.35 \times 10^{12}} \approx 295 \ \text{FLOP/byte}.$$
+A workload has to do about 300 floating-point operations for every byte it
+reads before the tensor cores become the bottleneck.</p>
+
+<h2>Decoding is a matrix&ndash;vector product</h2>
+
+<p>A transformer with $N$ parameters spends almost all of its forward pass in
+linear layers. Generating the next token for one sequence pushes a single
+activation vector through all of them: for each weight matrix
+$W \in \mathbb{R}^{m \times n}$ it computes $y = Wx$. That is $2mn$ FLOPs
+(one multiply and one add per weight) against $mn$ weights read. In 16-bit
+precision each weight is 2 bytes, so</p>
+
+$$I_{\text{decode}} \;\approx\; \frac{2mn}{2mn} \;=\; 1 \ \text{FLOP/byte}.$$
+
+<p>Every weight is fetched from memory, used exactly once, and thrown away.
+Against a ridge point near 300, decoding at batch size one can use at most
+about $1/295 \approx 0.3\%$ of the H100's compute. The rest of the chip idles.
+This is not an implementation problem that a better kernel can fix; it is a
+property of the workload.</p>
+
+<figure class="fig">
+<svg viewBox="0 0 560 330" role="img" aria-label="Roofline for an H100: decode at batch 1 sits far down the bandwidth slope; prefill reaches the compute roof." class="plot">
+<line x1="64.0" y1="16" x2="64.0" y2="282" class="grid"/>
+<text x="64.0" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">-1</tspan></text>
+<line x1="143.3" y1="16" x2="143.3" y2="282" class="grid"/>
+<text x="143.3" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">0</tspan></text>
+<line x1="222.7" y1="16" x2="222.7" y2="282" class="grid"/>
+<text x="222.7" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">1</tspan></text>
+<line x1="302.0" y1="16" x2="302.0" y2="282" class="grid"/>
+<text x="302.0" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">2</tspan></text>
+<line x1="381.3" y1="16" x2="381.3" y2="282" class="grid"/>
+<text x="381.3" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">3</tspan></text>
+<line x1="460.7" y1="16" x2="460.7" y2="282" class="grid"/>
+<text x="460.7" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">4</tspan></text>
+<line x1="540.0" y1="16" x2="540.0" y2="282" class="grid"/>
+<text x="540.0" y="298" text-anchor="middle">10<tspan dy="-5" font-size="9">5</tspan></text>
+<line x1="64" y1="282.0" x2="540" y2="282.0" class="grid"/>
+<text x="56" y="286.0" text-anchor="end">10<tspan dy="-5" font-size="9">11</tspan></text>
+<line x1="64" y1="224.2" x2="540" y2="224.2" class="grid"/>
+<text x="56" y="228.2" text-anchor="end">10<tspan dy="-5" font-size="9">12</tspan></text>
+<line x1="64" y1="166.3" x2="540" y2="166.3" class="grid"/>
+<text x="56" y="170.3" text-anchor="end">10<tspan dy="-5" font-size="9">13</tspan></text>
+<line x1="64" y1="108.5" x2="540" y2="108.5" class="grid"/>
+<text x="56" y="112.5" text-anchor="end">10<tspan dy="-5" font-size="9">14</tspan></text>
+<line x1="64" y1="50.7" x2="540" y2="50.7" class="grid"/>
+<text x="56" y="54.7" text-anchor="end">10<tspan dy="-5" font-size="9">15</tspan></text>
+<rect x="64" y="16" width="476" height="266" class="frame"/>
+<polyline class="roof" points="64.0,251.6 339.3,51.0 540.0,51.0"/>
+<circle cx="339.3" cy="51.0" r="2.5" fill="none" stroke="currentColor" class="frame"/>
+<text x="333.3" y="43.0" text-anchor="end" class="it">ridge I* &#8776; 295</text>
+<text x="464.6" y="43.0" text-anchor="middle" class="it">989 TFLOP/s (BF16)</text>
+<text transform="translate(171.1,165.6) rotate(-36.1)" text-anchor="middle" class="it">3.35 TB/s &#215; I</text>
+<circle cx="143.3" cy="193.8" r="4" class="pt"/>
+<text x="151.3" y="211.8" text-anchor="start">decode, batch 1</text>
+<circle cx="286.6" cy="89.4" r="4" class="pt"/>
+<text x="294.6" y="107.4" text-anchor="start">decode, batch 64</text>
+<circle cx="406.0" cy="51.0" r="4" class="pt"/>
+<text x="414.0" y="69.0" text-anchor="start">prefill, 2048 tokens</text>
+<text x="302.0" y="322" text-anchor="middle">arithmetic intensity <tspan font-style="italic">I</tspan> (FLOP / byte)</text>
+<text transform="translate(16,149.0) rotate(-90)" text-anchor="middle">attainable FLOP / s</text>
+</svg>
+<figcaption>Roofline of an H100 SXM (log&ndash;log). Decoding one sequence sits
+at $I \approx 1$, two orders of magnitude left of the ridge. Batching moves it
+right along the bandwidth slope; a long prompt in prefill reaches the compute
+roof.</figcaption>
+</figure>
+
+<h2>The one formula</h2>
+
+<p>If decoding is memory-bound, its speed is set by how many bytes each token
+forces the chip to read. Per generated token, a model must read all of its
+weights once, plus the part of its key&ndash;value (KV) cache that attention
+touches. Hence</p>
+
+$$\boxed{\;\text{tokens/s} \;\lesssim\; \frac{B}{\text{bytes}_{\text{weights}} + \text{bytes}_{\text{KV}}}\;}$$
+
+<p>The bound ignores compute entirely, and well-tuned engines get within a
+modest factor of it at batch one. Take a 7-billion-parameter model in FP16: about
+14&nbsp;GB of weights.</p>
+
+<figure class="table">
+<table class="booktabs" style="width:auto;margin:0 auto">
+<thead><tr><th>Chip</th><th class="r">Bandwidth</th><th class="r">FP16 (14 GB)</th><th class="r">&asymp;4-bit (3.9 GB)</th></tr></thead>
+<tbody>
+<tr><td>H100 SXM</td><td class="r">3.35 TB/s</td><td class="r">&le; 240 tok/s</td><td class="r">&le; 860 tok/s</td></tr>
+<tr><td>RTX 4090</td><td class="r">1.01 TB/s</td><td class="r">&le; 72 tok/s</td><td class="r">&le; 260 tok/s</td></tr>
+</tbody>
+</table>
+<figcaption>Upper bounds on single-sequence decode speed for a 7B model, from bandwidth alone (short context, KV cache ignored).</figcaption>
+</figure>
+
+<p>Two things follow immediately. First, the speed ceiling depends on the
+<em>memory system</em>, not the FLOP count on the box: a chip with half the
+compute and the same bandwidth decodes just as fast. Second, anything that
+shrinks the bytes per token raises the ceiling proportionally.</p>
+
+<h2>Prefill is the opposite regime</h2>
+
+<p>Before generating, the model processes the prompt. All $L$ prompt tokens
+are known up front, so each weight matrix multiplies an $n \times L$ matrix
+instead of a vector: $2mnL$ FLOPs for the same $2mn$ bytes of weights, giving
+$I_{\text{prefill}} \approx L$. A 2048-token prompt has $I \approx 2048$, far
+past the ridge. Prefill is compute-bound.</p>
+
+<p>This is why the two latencies users notice behave differently. Time to first
+token scales with prompt length and FLOPs. Time per output token scales with
+model size in bytes and is nearly flat in everything else. It is also why some
+serving systems run prefill and decode on separate pools of hardware: they are
+different workloads that want different chips.</p>
+
+<h2>The KV cache</h2>
+
+<p>Attention needs the keys and values of every previous token. Per token of
+context, the cache holds</p>
+
+$$\text{bytes}_{\text{KV}}/\text{token} \;=\; 2 \cdot n_{\text{layers}} \cdot n_{\text{kv-heads}} \cdot d_{\text{head}} \cdot \text{bytes per value},$$
+
+<p>the leading 2 counting keys and values. For a 32-layer model with 32 KV heads
+of dimension 128 in FP16, that is $2 \cdot 32 \cdot 32 \cdot 128 \cdot 2 = 512$&nbsp;KiB
+per token. At a 4096-token context, one sequence's cache is about 2.1&nbsp;GB,
+and generating each new token reads all of it.</p>
+
+<p>Unlike the weights, the KV cache is not shared across sequences. Batching
+amortizes weight reads over the batch, but each sequence still reads its own
+cache, so the attention part of decoding keeps an intensity near 1 no matter
+how large the batch. At long contexts and large batches, KV reads overtake
+weight reads and become the term that matters in the boxed formula.</p>
+
+<p>Grouped-query attention (GQA) and multi-query attention attack exactly this
+term: several query heads share one key&ndash;value head [3]. With 8 KV heads
+instead of 32, the cache above drops to 128&nbsp;KiB per token, a 4&times;
+reduction in the bytes attention reads, and each KV value is reused by 4 query
+heads, which raises attention's intensity by the same factor.</p>
+
+<h2>Every optimization, in one table</h2>
+
+<p>With the formula in hand, the standard toolbox sorts itself into two
+columns.</p>
+
+<figure class="table">
+<table class="booktabs">
+<thead><tr><th>Technique</th><th>Effect on the bound</th></tr></thead>
+<tbody>
+<tr><td>Batching $b$ sequences</td><td>One weight read serves $b$ tokens: weight intensity $\approx b$</td></tr>
+<tr><td>Weight quantization</td><td>Fewer bytes per weight: 16&rarr;4 bits is $\approx 4\times$ the ceiling</td></tr>
+<tr><td>KV-cache quantization</td><td>Fewer bytes per cached value</td></tr>
+<tr><td>GQA / MQA</td><td>Fewer KV heads, fewer KV bytes per token</td></tr>
+<tr><td>Mixture of experts</td><td>At batch one, read only the active experts' weights</td></tr>
+<tr><td>Speculative decoding</td><td>Verify several tokens per weight read</td></tr>
+<tr><td>FlashAttention</td><td>Never write the attention matrix to memory</td></tr>
+</tbody>
+</table>
+<figcaption>Each technique either removes bytes or reuses them.</figcaption>
+</figure>
+
+<p><strong>Batching</strong> is the most direct. A step that decodes $b$
+sequences reads the weights once and does $b$ times the work, so the weight
+part of the workload has $I \approx b$. Up to roughly $b \approx I^\star$, a
+batched step costs about the same wall time as a single one, which is why
+servers batch aggressively and why per-token cost falls so steeply with load.
+The catch is the KV cache, which grows with $b$ and does not amortize.</p>
+
+<p><strong>Quantization</strong> works for decode for a reason that has little
+to do with arithmetic. In weight-only schemes, low-precision weights are
+dequantized in registers and the math still runs in 16 bits. The win is purely that a 4-bit weight is a
+quarter of the bytes. The table above shows the ceiling rising accordingly.</p>
+
+<p><strong>Mixture of experts</strong> is a bandwidth trick at small batch:
+each token is routed through only a few experts, so it reads only their
+weights. Mixtral 8&times;7B has about 47B parameters but uses about 13B per
+token [4]. At large batch, different tokens pick different experts, most
+experts get read every step, and the advantage over a dense model shrinks.</p>
+
+<p><strong>Speculative decoding</strong> exploits the gap between $I = 1$ and
+$I^\star \approx 300$ directly. A cheap draft model guesses several tokens;
+the large model checks all of them in one forward pass. Checking $k$ tokens is
+a matrix&ndash;matrix product with $I \approx k$, and while $k \ll I^\star$ it
+costs about the same as producing one token. The idle compute becomes speed.
+Remarkably, a rejection-sampling acceptance rule makes this exact: the output
+distribution is unchanged [5].</p>
+
+<h2>Where the model breaks</h2>
+
+<p>The roofline is a bound, not a prediction, and the boxed formula holds only
+while its assumptions do.</p>
+<ul>
+<li><strong>Large batches.</strong> Once the weight intensity $b$ passes $I^\star$,
+the step becomes compute-bound and the levers change: FLOPs, not bytes, are
+what to cut.</li>
+<li><strong>Small models and overheads.</strong> For tiny models, kernel launch
+latency, synchronization and the host side can dominate, and the real number
+falls well below the bandwidth line.</li>
+<li><strong>Caches.</strong> If the weights fit in on-chip cache (small models
+on CPUs, or some accelerators with large SRAM), the relevant $B$ is the cache
+bandwidth, not DRAM.</li>
+<li><strong>Achieved bandwidth.</strong> Real kernels reach a large fraction of
+peak bandwidth, not all of it, so practical numbers sit somewhat below the
+table.</li>
+</ul>
+
+<p>Within those limits, one inequality explains why a laptop runs a 4-bit 7B
+model at a usable speed, why serving gets cheaper with more users, why
+attention variants are judged by their cache size, and why spending FLOPs to
+save bytes is so often the right trade.</p>
+
+<h2 class="nonum">References</h2>
+<ol class="bib">
+<li>S. Williams, A. Waterman, D. Patterson. <i>Roofline: An insightful visual performance model for multicore architectures.</i> Communications of the ACM, 2009.</li>
+<li>NVIDIA. <i>H100 Tensor Core GPU datasheet</i> (SXM: 3.35 TB/s HBM3; 989 TFLOP/s dense BF16). RTX 4090 bandwidth: 1,008 GB/s.</li>
+<li>J. Ainslie et al. <i>GQA: Training generalized multi-query transformer models from multi-head checkpoints.</i> EMNLP, 2023. N. Shazeer. <i>Fast transformer decoding: One write-head is all you need.</i> 2019.</li>
+<li>A. Q. Jiang et al. <i>Mixtral of experts.</i> 2024.</li>
+<li>Y. Leviathan, M. Kalman, Y. Matias. <i>Fast inference from transformers via speculative decoding.</i> ICML, 2023.</li>
+</ol>
+
+</article>
+
+<p class="backlink"><a href="/writing/">&larr; All writing</a></p>
+</main>
+
+<footer class="pagefoot">
+  <div class="colophon">Set in Latin Modern. &copy; 2026 Nathan DeMoss.</div>
+</footer>
+
+</body>
+</html>
