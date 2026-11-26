@@ -4,116 +4,152 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nathan DeMoss</title>
-<meta name="description" content="Nathan DeMoss. AI and open source. Raleigh, NC.">
+<meta name="description" content="Nathan DeMoss. C++ and machine learning. Raleigh, NC.">
+<meta name="theme-color" content="#fffffe">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-<header>
-  <h1>Nathan DeMoss</h1>
-  <p class="tagline">Raleigh, NC</p>
-  <figure class="scope">
-    <div class="scope-frame">
-      <canvas id="pins" aria-hidden="true"></canvas>
-    </div>
-    <figcaption>
-      A pinscreen. Press into it; click to leave a lasting dent,
-      double-click to smooth it out.
-    </figcaption>
-  </figure>
+<header class="runhead">
+  <span class="left">N. DeMoss</span>
+  <nav aria-label="Site">
+    <a href="/" aria-current="page">Home</a>
+    <a href="/projects.html">Projects</a>
+    <a href="/writing/">Writing</a>
+  </nav>
 </header>
+
+<div class="titleblock">
+  <h1>Nathan DeMoss</h1>
+  <div class="affil">Cary Academy &middot; Raleigh, North Carolina</div>
+  <div class="contact">
+    <a href="mailto:nate@natedemoss.dev">nate@natedemoss.dev</a><span class="sep">&middot;</span><a href="https://github.com/natedemoss">github</a><span class="sep">&middot;</span><a href="https://x.com/ndemoss28">x</a><span class="sep">&middot;</span><a href="https://www.linkedin.com/in/natedemoss/">linkedin</a>
+  </div>
+</div>
 
 <main>
 
-<section>
+<div class="abstract">
+  <h2>Abstract</h2>
   <p>
-    Student at <a href="https://www.caryacademy.org/">Cary Academy</a>.
-    C++ Dev mostly
+    I work on <strong>C++</strong> and <strong>machine learning</strong>:
+    the systems underneath models, and the models themselves. I contribute
+    to open-source agent and inference infrastructure, build small tools
+    for evaluating and training models, and do competitive programming.
+    The projects are <a href="/projects.html">here</a>; the
+    writing is <a href="/writing/">here</a>.
   </p>
-  <p>Github activity:</p>
-  <p class="activity" id="activity" hidden></p>
-</section>
+</div>
 
-<section>
-  <h2>Projects</h2>
-  <ul class="projects">
+<section id="experience">
+  <h2>Experience</h2>
+  <ul class="entries">
     <li>
-      <a href="https://github.com/NiLabs-Org/cf-recommend">cf-recommend</a>
-      <span class="meta">C++</span>
-      <p>Tells you what Codeforces problem to do next.</p>
+      <div class="row">
+        <span class="what"><a href="https://github.com/NVIDIA/OpenShell">NVIDIA OpenShell</a></span>
+        <span class="when">v0.1.0</span>
+      </div>
+      <div class="role">Contributor</div>
+      <div class="desc"><p>Safe, private runtime for autonomous agents. Contributor to the v0.1.0 release.</p></div>
     </li>
     <li>
-      <a href="https://github.com/NiLabs-Org/conform">conform</a>
-      <span class="meta">Python</span>
-      <p>Checks whether inference engines actually agree.
-        <a href="https://nilabs.dev/conform">More</a>.</p>
+      <div class="row">
+        <span class="what"><a href="https://github.com/vllm-project/vime">vLLM &mdash; vime</a></span>
+        <span class="when">open source</span>
+      </div>
+      <div class="role">Contributor</div>
+      <div class="desc"><p>Post-training framework from the vLLM project.</p></div>
     </li>
     <li>
-      <a href="https://github.com/NiLabs-Org/ladder">ladder</a>
-      <span class="meta">Python</span>
-      <p>Small models fine-tuned to do competitive programming.</p>
+      <div class="row">
+        <span class="what"><a href="https://github.com/openclaw/openclaw-enterprise">OpenClaw Enterprise</a></span>
+        <span class="when">open source</span>
+      </div>
+      <div class="role">Contributor</div>
+      <div class="desc"><p>Orchestration suite for OpenClaw agents.</p></div>
     </li>
     <li>
-      <a href="https://github.com/natedemoss/Teammind">Teammind</a>
-      <span class="meta">TypeScript</span>
-      <p>Team memory for Claude Code.</p>
+      <div class="row">
+        <span class="what"><a href="https://github.com/NiLabs-Org">NiLabs</a></span>
+        <span class="when">ongoing</span>
+      </div>
+      <div class="desc"><p>Open-source ML tooling: <a href="https://github.com/NiLabs-Org/conform">conform</a>
+        (do inference engines actually agree?), <a href="https://github.com/NiLabs-Org/ladder">ladder</a>
+        (small models fine-tuned for competitive programming), and
+        <a href="https://github.com/NiLabs-Org/cf-recommend">cf-recommend</a>.</p></div>
     </li>
     <li>
-      <a href="https://github.com/natedemoss/openvim">openvim</a>
-      <span class="meta">Lua</span>
-      <p>Neovim, but with agents.</p>
-    </li>
-    <li>
-      <a href="https://github.com/natedemoss/Claude-Code-Wrapped-Skill">Claude Code Wrapped</a>
-      <span class="meta">Python</span>
-      <p>Spotify Wrapped, but for your terminal.</p>
-    </li>
-  </ul>
-  <p class="more">
-    Rest is on <a href="https://github.com/natedemoss?tab=repositories">GitHub</a>.
-  </p>
-</section>
-
-<section>
-  <h2>Contributing:</h2>
-  <ul class="projects">
-    <li>
-      <a href="https://github.com/NVIDIA/OpenShell">OpenShell</a>
-      <span class="meta">NVIDIA</span>
-      <p>Safe, private runtime for autonomous agents.</p>
-    </li>
-    <li>
-      <a href="https://github.com/vllm-project/vime">vllm-project/vime</a>
-      <span class="meta">vLLM</span>
-      <p>Post-training framework</p>
-    </li>
-    <li>
-      <a href="https://github.com/openclaw/openclaw-enterprise">openclaw/openclaw-enterprise</a>
-      <span class="meta">Openclaw</span>
-      <p>Orchestration suite</p>
+      <div class="row">
+        <span class="what"><a href="https://www.caryacademy.org/">Cary Academy</a></span>
+        <span class="when">Raleigh, NC</span>
+      </div>
+      <div class="role">Student</div>
     </li>
   </ul>
 </section>
 
-<section>
-  <h2>Elsewhere</h2>
-  <ul class="links">
-    <li><a href="https://github.com/natedemoss">GitHub</a></li>
-    <li><a href="https://www.linkedin.com/in/natedemoss/">LinkedIn</a></li>
-    <li><a href="https://x.com/ndemoss28">X</a></li>
-    <li><a href="mailto:nate@natedemoss.dev">Email</a></li>
+<section id="honors">
+  <h2>Honors</h2>
+  <ul class="entries">
+    <li>
+      <div class="row">
+        <span class="what">USAYPT, 4th place nationally</span>
+        <span class="when">2025</span>
+      </div>
+      <div class="desc"><p>U.S. Association for Young Physicists Tournaments<sup class="fn"><a href="#fn1" id="fnref1">1</a></sup>.</p></div>
+    </li>
   </ul>
 </section>
+
+<section id="activity">
+  <h2>Recent activity</h2>
+  <figure class="table activity-wrap">
+    <table class="booktabs">
+      <thead>
+        <tr><th>Event</th><th>Repository</th><th class="r">When</th></tr>
+      </thead>
+      <tbody id="activity-rows">
+        <tr><td colspan="3" class="placeholder">Fetching from the GitHub API&hellip;</td></tr>
+      </tbody>
+    </table>
+    <figcaption>Latest public events on <a href="https://github.com/natedemoss">github.com/natedemoss</a>, fetched live.</figcaption>
+  </figure>
+</section>
+
+<section id="writing">
+  <h2>Writing</h2>
+  <ol class="toc">
+    <li>
+      <div class="line"><span class="title"><a href="/writing/llm-training.html">The hardest problem I&rsquo;ve attempted</a></span><span class="dots"></span><span class="date">May 2026</span></div>
+      <div class="blurb">Codeforces 2181L. The optimal model is the empirical distribution; computing it fast needs a suffix automaton.</div>
+    </li>
+    <li>
+      <div class="line"><span class="title"><a href="/writing/sum-of-two-numbers.html">Codeforces 1788B: Sum of Two Numbers</a></span><span class="dots"></span><span class="date">May 2026</span></div>
+      <div class="blurb">Split <i>n</i> so the two parts have nearly equal digit sums.</div>
+    </li>
+  </ol>
+  <p class="note">All posts: <a href="/writing/">/writing</a>.</p>
+</section>
+
+<section id="fun">
+  <h2>Outside of work</h2>
+  <p>Poker (decent at it), chess, and video games.</p>
+</section>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn1"><span class="mark">1</span>A team tournament in which students research open-ended physics problems and defend their solutions against other teams. <a href="#fnref1" aria-label="Back to text">&#8617;</a></li>
+  </ol>
+</div>
 
 </main>
 
-<footer>
-  <p>&copy; 2026</p>
+<footer class="pagefoot">
+  <div>1</div>
+  <div class="colophon">Set in Latin Modern. &copy; 2026 Nathan DeMoss.</div>
 </footer>
 
-<script src="/pins.js" defer></script>
 <script src="/activity.js" defer></script>
-
 </body>
 </html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codeforces 1788B: Sum of Two Numbers &mdash; Nathan DeMoss</title>
+<meta name="description" content="Split n so two parts have nearly-equal digit sums.">
+<meta name="theme-color" content="#fffffe">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="/math.js"></script>
+</head>
+<body>
+
+<header class="runhead">
+  <span class="left">N. DeMoss &mdash; Writing</span>
+  <nav aria-label="Site">
+    <a href="/">Home</a>
+    <a href="/projects.html">Projects</a>
+    <a href="/writing/" aria-current="page">Writing</a>
+  </nav>
+</header>
+
+<div class="titleblock">
+  <h1>Codeforces 1788B: Sum of Two Numbers</h1>
+  <div class="author">Nathan DeMoss</div>
+  <div class="date">May 10, 2026</div>
+</div>
+
+<main>
+<div class="abstract">
+  <h2>Abstract</h2>
+  <p>Split n so two parts have nearly-equal digit sums.</p>
+</div>
+
+<article>
+<p><a href="https://codeforces.com/problemset/problem/1788/B">Problem link.</a></p>
+<figure class="fig"><img src="img/sum-of-two-numbers.png" alt="Problem statement of Codeforces 1788B, Sum of Two Numbers." loading="lazy"><figcaption>Problem statement of Codeforces 1788B, Sum of Two Numbers.</figcaption></figure>
+<h2>Problem</h2>
+<p>Given $n \le 10^9$, find $x, y \ge 0$ with $x + y = n$ and $|S(x) - S(y)| \le 1$, where $S$ is digit sum. Up to $10^4$ tests.</p>
+<h2>Why brute force fails</h2>
+<p>Looping $x$ from $0$ to $n/2$ is $O(n)$ per test. With $t = 10^4$ and $n = 10^9$, that's $10^{13}$ ops. Need to think in digits, not magnitude.</p>
+<h2>Key fact</h2>
+<p>Split $n$ digit by digit: pick $x_i, y_i \in [0,9]$ with $x_i + y_i = n_i$. No carries, so</p>
+<div class="math">$$S(x) + S(y) = S(n).$$</div>
+<p>(Each carry subtracts $9$ from the digit sum total. No carries, no loss.)</p>
+<p>The total is fixed. So the question becomes: how do we split each digit so $S(x)$ and $S(y)$ end up balanced?</p>
+<h2>The split</h2>
+<p>For digit $d$, the best you can do alone is $\lceil d/2 \rceil$ vs $\lfloor d/2 \rfloor$. Even digits split evenly. Odd digits leave a $\pm 1$ imbalance.</p>
+<p>If every odd digit's bigger half goes to $x$, the imbalance can hit $10$. Alternate instead: flip which side gets the bigger half each time you see an odd digit. Imbalance stays in $\{-1, 0, 1\}$.</p>
+<h2>Trace, $n = 1206$</h2>
+<figure class="table"><table class="booktabs" style="width:auto;margin:0 auto"><thead><tr><th class="c">digit</th><th class="c">$x$</th><th class="c">$y$</th><th class="c">sign</th></tr></thead><tbody><tr><td class="c">1</td><td class="c">1</td><td class="c">0</td><td class="c">flip</td></tr><tr><td class="c">2</td><td class="c">11</td><td class="c">1</td><td class="c"></td></tr><tr><td class="c">0</td><td class="c">110</td><td class="c">10</td><td class="c"></td></tr><tr><td class="c">6</td><td class="c">1103</td><td class="c">103</td><td class="c"></td></tr></tbody></table><figcaption>Building <i>x</i> and <i>y</i> digit by digit.</figcaption></figure>
+<p>$1103 + 103 = 1206$. $S(1103) = 5$, $S(103) = 4$.</p>
+<h2>Code</h2>
+<pre><code>#include &lt;bits/stdc++.h&gt;
+using namespace std;
+// accepted in 46ms
+int main() {
+    int t; scanf(&quot;%d&quot;, &amp;t);
+    while (t--) {
+        long long n; scanf(&quot;%lld&quot;, &amp;n);
+        string s = to_string(n);
+        long long x = 0, y = 0;
+        int sign = 1;
+        for (char c : s) {
+            int d = c - &#x27;0&#x27;, big = (d+1)/2, small = d/2;
+            if (d % 2 == 0) { x = x*10+big; y = y*10+small; }
+            else if (sign == 1) { x = x*10+big; y = y*10+small; sign = -1; }
+            else { x = x*10+small; y = y*10+big; sign = 1; }
+        }
+        printf(&quot;%lld %lld\n&quot;, x, y);
+    }
+}</code></pre>
+<h2>Complexity</h2>
+<p>$O(\log n)$ per test, $O(t \log n)$ total. About $10^5$ ops worst case.</p>
+</article>
+
+<p class="backlink"><a href="/writing/">&larr; All writing</a></p>
+</main>
+
+<footer class="pagefoot">
+  <div class="colophon">Set in Latin Modern. &copy; 2026 Nathan DeMoss.</div>
+</footer>
+
+</body>
+</html>

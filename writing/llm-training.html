@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The hardest problem I&#x27;ve attempted &mdash; Nathan DeMoss</title>
+<meta name="description" content="Codeforces 2181L. Train an LLM analytically. The optimal model is the empirical distribution; computing it fast needs a suffix automaton.">
+<meta name="theme-color" content="#fffffe">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="/math.js"></script>
+</head>
+<body>
+
+<header class="runhead">
+  <span class="left">N. DeMoss &mdash; Writing</span>
+  <nav aria-label="Site">
+    <a href="/">Home</a>
+    <a href="/projects.html">Projects</a>
+    <a href="/writing/" aria-current="page">Writing</a>
+  </nav>
+</header>
+
+<div class="titleblock">
+  <h1>The hardest problem I&#x27;ve attempted</h1>
+  <div class="author">Nathan DeMoss</div>
+  <div class="date">May 12, 2026</div>
+</div>
+
+<main>
+<div class="abstract">
+  <h2>Abstract</h2>
+  <p>Codeforces 2181L. Train an LLM analytically. The optimal model is the empirical distribution; computing it fast needs a suffix automaton.</p>
+</div>
+
+<article>
+<p><a href="https://codeforces.com/problemset/problem/2181/L">Problem link.</a></p>
+<figure class="fig"><img src="img/2181l.png" alt="Problem statement of Codeforces 2181L, LLM Training." loading="lazy"><figcaption>Problem statement of Codeforces 2181L, LLM Training.</figcaption></figure>
+<h2>Setup</h2>
+<p>Dataset: $n$ texts $t_1, \ldots, t_n$. Each text marks some positions as LLM-generated (set $L_i$). For each $k$ from $0$ to $M-1$ where $M = \max_i |t_i|$, find the minimum cross-entropy loss</p>
+<div class="math">$$\mathcal{L}_k = \sum_{i=1}^{n} \sum_{j \in L_i} -\log_2 P_k\big(t_i[j] \mid t_i[\max(1, j-k) .. j-1]\big)$$</div>
+<p>over every valid context-$k$ probabilistic model $P_k$. Constraints: $\sum |t_i| \le 3 \cdot 10^5$.</p>
+<h2>The model is a lookup table</h2>
+<p>There is no training. $P_k(\cdot \mid w)$ is a free distribution per context $w$, so we minimize each context independently. For context $w$ with next-token counts $c_w(x)$ summing to $C_w$, minimize</p>
+<div class="math">$$\sum_x -c_w(x) \log_2 p_x \quad \text{s.t.} \quad \sum_x p_x = 1.$$</div>
+<p>Gibbs gives $p_x = c_w(x) / C_w$ with optimum value $C_w \log_2 C_w - \sum_x c_w(x) \log_2 c_w(x)$. So</p>
+<div class="math">$$\mathcal{L}_k = \sum_{w} \Big( C_w \log_2 C_w - \sum_x c_w(x) \log_2 c_w(x) \Big),$$</div>
+<p>summed over distinct length-$\min(j-1, k)$ contexts that precede an L-position. The problem reduces to: for every $k$, group L-positions by their length-$k$ context, fast.</p>
+<h2>Trie blows up</h2>
+<p>A trie of reversed prefixes ending at L-positions has up to $\Theta(M^2) \approx 9 \cdot 10^{10}$ nodes when one text is $3 \cdot 10^5$ tokens long. Dead.</p>
+<h2>Generalized suffix automaton</h2>
+<p>Build a generalized SAM over all texts (integer alphabet, <code>map&lt;int,int&gt;</code> per state). It has $O(N)$ states. For each L-position $(i, j)$ identify the state $s^*_{i,j}$ representing the full prefix $t_i[1..j-1]$.</p>
+<p>In the SAM's suffix-link tree, state $s$ holds strings of lengths $[\mathrm{minlen}(s), \mathrm{maxlen}(s)]$. The length-$k$ context of $(i, j)$ for $k \le j-1$ is a suffix of its prefix, and that suffix lives in the unique ancestor of $s^*_{i,j}$ whose length range covers $k$.</p>
+<p>For a fixed state $s$ with $a = \mathrm{minlen}(s)$, $b = \mathrm{maxlen}(s)$:</p>
+<ul><li>$k \in [a, b]$: every L-position in $s$'s suffix-link subtree lands at $s$. Contribute the entropy of all their next-tokens.</li><li>$k &gt; b$: only L-positions whose $s^* = s$ stay (descendants moved deeper). Contribute the entropy over just those.</li></ul>
+<p>Both are interval updates on the answer array. Difference array, prefix-sum at the end.</p>
+<h2>Subtree entropies via small-to-large</h2>
+<p>For each state we need $\sum_x f(c(x))$ where $f(c) = c \log_2 c$. Walk the suffix-link tree post-order, merging child next-token count maps small-to-large into the parent. Maintain $\sum_x f(c(x))$ incrementally: when count of $x$ changes from $a$ to $a + \Delta$, add $f(a + \Delta) - f(a)$.</p>
+<p>Each token participates in $O(\log N)$ merges, total $O(N \log^2 N)$.</p>
+<h2>Full code</h2>
+<details>
+<summary>Click to expand (~340 lines)</summary>
+<pre><code>// CF 2181L - LLM Training
+// the trick: the optimal model is just the empirical distribution
+// (gibbs inequality). once you see that, the &quot;training&quot; goes away and
+// what&#x27;s left is: group every L-position by its length-k context and
+// compute entropy of next-tokens per group.
+//
+// naive is O(N*M). need to share work across k.
+//
+// build a generalized suffix automaton over all texts. each L-position
+// at (i,j) sits at some SAM state s* (the state for prefix t_i[1..j-1]).
+// for context length k:
+//   - it lives at s* if minlen(s*) &lt;= k
+//   - otherwise it lives at some ancestor of s* in the suffix-link tree
+//
+// so each SAM state s contributes to ans[k]:
+//   - for k in [minlen(s), maxlen(s)]: entropy over ALL L-positions in
+//     its suffix-link subtree
+//   - for k &gt; maxlen(s): entropy over only L-positions whose s* == s
+//     (everyone else has moved on to deeper states)
+//
+// both are range updates -&gt; difference array.
+//
+// subtree entropies are aggregated via small-to-large on the suffix-link
+// tree, maintaining sum_x f(c(x)) incrementally so we never recompute.
+//
+// precision: doubles are fine, problem allows 1e-6.
+
+#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+// f(c) = c*log2(c), with f(0)=0. precomputed because we call it a LOT
+// during the small-to-large merge and log() isn&#x27;t cheap.
+static vector&lt;double&gt; Fcache;
+static inline double f_of(long long c) {
+    if (c &lt;= 0) return 0.0;
+    if ((size_t)c &lt; Fcache.size()) return Fcache[(size_t)c];
+    return (double)c * log2((double)c);
+}
+
+// generalized SAM. tokens are ints (huge alphabet) so map&lt;int,int&gt; per
+// state. between texts we just reset `last` to root; that&#x27;s the whole
+// &quot;generalized&quot; trick.
+struct SAM {
+    struct State {
+        int len;
+        int link;
+        map&lt;int, int&gt; next;
+    };
+    vector&lt;State&gt; st;
+    int last;
+
+    void init() {
+        st.clear();
+        st.reserve(4);
+        st.push_back({0, -1, {}});
+        last = 0;
+    }
+    void reset_last() { last = 0; }
+
+    int extend(int c) {
+        // generalized-SAM gotcha: if `last` already has a transition on c,
+        // the string we&#x27;d be adding has been seen before. don&#x27;t make a
+        // new state, just walk into the existing one (with a possible clone).
+        if (st[last].next.count(c)) {
+            int p = last;
+            int q = st[p].next[c];
+            if (st[p].len + 1 == st[q].len) {
+                last = q;
+                return q;
+            }
+            int clone = (int)st.size();
+            st.push_back({st[p].len + 1, st[q].link, st[q].next});
+            while (p != -1 &amp;&amp; st[p].next.count(c) &amp;&amp; st[p].next[c] == q) {
+                st[p].next[c] = clone;
+                p = st[p].link;
+            }
+            st[q].link = clone;
+            last = clone;
+            return clone;
+        }
+        int cur = (int)st.size();
+        st.push_back({st[last].len + 1, -1, {}});
+        int p = last;
+        while (p != -1 &amp;&amp; !st[p].next.count(c)) {
+            st[p].next[c] = cur;
+            p = st[p].link;
+        }
+        if (p == -1) {
+            st[cur].link = 0;
+        } else {
+            int q = st[p].next[c];
+            if (st[p].len + 1 == st[q].len) {
+                st[cur].link = q;
+            } else {
+                int clone = (int)st.size();
+                st.push_back({st[p].len + 1, st[q].link, st[q].next});
+                while (p != -1 &amp;&amp; st[p].next.count(c) &amp;&amp; st[p].next[c] == q) {
+                    st[p].next[c] = clone;
+                    p = st[p].link;
+                }
+                st[q].link = clone;
+                st[cur].link = clone;
+            }
+        }
+        last = cur;
+        return cur;
+    }
+
+    int size() const { return (int)st.size(); }
+    int len(int s) const { return st[s].len; }
+    int link(int s) const { return st[s].link; }
+    int minlen(int s) const { return s == 0 ? 0 : st[st[s].link].len + 1; }
+};
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n;
+    if (!(cin &gt;&gt; n)) return 0;
+
+    unordered_map&lt;string, int&gt; tokId;
+    tokId.reserve(1 &lt;&lt; 16);
+
+    vector&lt;vector&lt;int&gt;&gt; texts(n);
+    vector&lt;string&gt; isLLM(n);
+
+    int totalTokens = 0;
+    int M = 0;
+
+    for (int i = 0; i &lt; n; ++i) {
+        int m;
+        cin &gt;&gt; m;
+        texts[i].resize(m);
+        for (int j = 0; j &lt; m; ++j) {
+            string s;
+            cin &gt;&gt; s;
+            auto it = tokId.find(s);
+            int id;
+            if (it == tokId.end()) {
+                id = (int)tokId.size();
+                tokId.emplace(std::move(s), id);
+            } else {
+                id = it-&gt;second;
+            }
+            texts[i][j] = id;
+        }
+        cin &gt;&gt; isLLM[i];
+        totalTokens += m;
+        M = max(M, m);
+    }
+
+    Fcache.assign(totalTokens + 1, 0.0);
+    for (int c = 1; c &lt;= totalTokens; ++c) {
+        Fcache[c] = (double)c * log2((double)c);
+    }
+
+    // build the SAM, and as we go, remember which state we&#x27;re at after
+    // each prefix of each text. state_after[i][p] = state for t_i[1..p].
+    SAM sam;
+    sam.init();
+
+    vector&lt;vector&lt;int&gt;&gt; state_after(n);
+    for (int i = 0; i &lt; n; ++i) {
+        sam.reset_last();
+        int m = (int)texts[i].size();
+        state_after[i].resize(m + 1);
+        state_after[i][0] = 0;
+        for (int p = 0; p &lt; m; ++p) {
+            int s = sam.extend(texts[i][p]);
+            state_after[i][p + 1] = s;
+        }
+    }
+    int S = sam.size();
+
+    // for each L-position (i, j), bucket the next-token (= t_i[j]) under
+    // its full-prefix state s*. these are the positions that &quot;live&quot; at s*
+    // permanently once k passes maxlen(s*).
+    vector&lt;vector&lt;int&gt;&gt; own(S);
+    for (int i = 0; i &lt; n; ++i) {
+        int m = (int)texts[i].size();
+        for (int j = 1; j &lt;= m; ++j) {
+            if (isLLM[i][j - 1] == &#x27;L&#x27;) {
+                int s = state_after[i][j - 1];
+                own[s].push_back(texts[i][j - 1]);
+            }
+        }
+    }
+
+    // E_own(s) = entropy of own[s]&#x27;s next-token distribution
+    //          = f(C) - sum_x f(c(x))
+    vector&lt;double&gt; E_own(S, 0.0);
+    for (int s = 0; s &lt; S; ++s) {
+        if (own[s].empty()) continue;
+        unordered_map&lt;int, int&gt; cnt;
+        cnt.reserve(own[s].size() * 2);
+        for (int x : own[s]) cnt[x]++;
+        long long C = (long long)own[s].size();
+        double sumf = 0.0;
+        for (auto &amp;kv : cnt) sumf += f_of(kv.second);
+        E_own[s] = f_of(C) - sumf;
+        if (E_own[s] &lt; 0) E_own[s] = 0;
+    }
+
+    vector&lt;vector&lt;int&gt;&gt; children(S);
+    for (int s = 1; s &lt; S; ++s) {
+        children[sam.link(s)].push_back(s);
+    }
+
+    // post-order walk of the suffix-link tree, merging children into parents
+    // small-to-large. for each state we keep:
+    //   - map: next-token -&gt; count in subtree
+    //   - sumF: sum_x f(count(x))
+    //   - totC: sum of counts
+    // then E_sub(s) = f(totC) - sumF.
+    vector&lt;unordered_map&lt;int, int&gt;*&gt; sub(S, nullptr);
+    vector&lt;double&gt; sumF(S, 0.0);
+    vector&lt;long long&gt; totC(S, 0);
+    vector&lt;double&gt; E_sub(S, 0.0);
+
+    vector&lt;int&gt; order;
+    order.reserve(S);
+    {
+        vector&lt;int&gt; stk;
+        stk.reserve(S);
+        stk.push_back(0);
+        while (!stk.empty()) {
+            int u = stk.back(); stk.pop_back();
+            order.push_back(u);
+            for (int v : children[u]) stk.push_back(v);
+        }
+    }
+    for (int idx = (int)order.size() - 1; idx &gt;= 0; --idx) {
+        int s = order[idx];
+        unordered_map&lt;int,int&gt;* mp = new unordered_map&lt;int,int&gt;();
+        double sf = 0.0;
+        long long tc = 0;
+        if (!own[s].empty()) {
+            mp-&gt;reserve(own[s].size() * 2);
+            for (int x : own[s]) {
+                auto it = mp-&gt;find(x);
+                if (it == mp-&gt;end()) {
+                    (*mp)[x] = 1;
+                    sf += f_of(1);
+                    tc += 1;
+                } else {
+                    int old = it-&gt;second;
+                    it-&gt;second = old + 1;
+                    sf += f_of(old + 1) - f_of(old);
+                    tc += 1;
+                }
+            }
+        }
+        for (int c : children[s]) {
+            unordered_map&lt;int,int&gt;* cmp = sub[c];
+            if (!cmp) continue;
+            if (cmp-&gt;size() &gt; mp-&gt;size()) {
+                swap(mp, cmp);
+                swap(sf, sumF[c]);
+                swap(tc, totC[c]);
+            }
+            for (auto &amp;kv : *cmp) {
+                int x = kv.first;
+                int add = kv.second;
+                auto it = mp-&gt;find(x);
+                if (it == mp-&gt;end()) {
+                    (*mp)[x] = add;
+                    sf += f_of(add);
+                } else {
+                    int old = it-&gt;second;
+                    int neu = old + add;
+                    it-&gt;second = neu;
+                    sf += f_of(neu) - f_of(old);
+                }
+            }
+            tc += totC[c];
+            delete cmp;
+            sub[c] = nullptr;
+        }
+        sub[s] = mp;
+        sumF[s] = sf;
+        totC[s] = tc;
+        double e = f_of(tc) - sf;
+        if (e &lt; 0) e = 0;
+        E_sub[s] = e;
+    }
+    if (sub[0]) { delete sub[0]; sub[0] = nullptr; }
+
+    // for each state s, with minlen=a, maxlen=b:
+    //   E_sub(s) hits ans[k] for k in [a, b]
+    //   E_own(s) hits ans[k] for k in [b+1, M-1]
+    vector&lt;double&gt; diff(M + 1, 0.0);
+    for (int s = 0; s &lt; S; ++s) {
+        int lo = sam.minlen(s);
+        int hi = sam.len(s);
+        if (lo &gt; M - 1) continue;
+        if (hi &gt; M - 1) hi = M - 1;
+        if (E_sub[s] != 0.0) {
+            diff[lo] += E_sub[s];
+            diff[hi + 1] -= E_sub[s];
+        }
+        int olo = sam.len(s) + 1;
+        int ohi = M - 1;
+        if (E_own[s] != 0.0 &amp;&amp; olo &lt;= ohi) {
+            diff[olo] += E_own[s];
+            diff[ohi + 1] -= E_own[s];
+        }
+    }
+
+    cout.setf(std::ios::fixed);
+    cout &lt;&lt; setprecision(12);
+    double run = 0.0;
+    for (int k = 0; k &lt; M; ++k) {
+        run += diff[k];
+        double out = run &lt; 0 ? 0.0 : run;
+        cout &lt;&lt; out &lt;&lt; &quot;\n&quot;;
+    }
+
+    return 0;
+}</code></pre>
+</details>
+<h2>Complexity</h2>
+<p>$O(N \log^2 N)$ time, $O(N)$ space in SAM states. Worst case ($N = 3 \cdot 10^5$, single text, binary alphabet) runs in about 1 second; memory peak around 150 MB.</p>
+<h2>Thought process</h2>
+<p>What I actually did, in order:</p>
+<ol><li>Stared at the loss formula, and wanted to quit.. Spent a while just unpacking $t_i[\max(1, j-k) .. j-1]$ and convincing myself the $\max$ was only there to handle the start of the text.</li><li>Tried to picture "training" $P_k$. Got nowhere until I noticed $P_k$ is a totally free distribution per context. At that point the problem stops being optimization and becomes: pick the best distribution per context independently. Gibbs gives the empirical distribution.</li><li>Sanity-checked $k = 0$: all L-positions share the empty context, so $\mathcal{L}_0 = C \log_2 C - \sum_x c(x) \log_2 c(x)$, which is just $C$ times the empirical entropy. Matched the first sample.</li><li>Wrote out a brute force: for each $k$, group L-positions by their length-$k$ context, sum entropies. $O(N \cdot M)$. Way too slow.</li><li>Tried a trie of reversed prefixes. Looked clean for about five minutes until I worked out the worst case (one long text) and got $\Theta(M^2)$ nodes.</li><li>Reached for SAM. The substrings ending just before each L-position are exactly what a generalized SAM enumerates. Took a while to nail down which SAM state holds which positions for which $k$.</li><li>Once I had "state $s$ contributes $E_\text{sub}$ on $[\mathrm{minlen}, \mathrm{maxlen}]$ and $E_\text{own}$ above", the rest was bookkeeping: difference array for the range updates, small-to-large on the suffix-link tree to aggregate the next-token counts.</li><li>Spent the longest debugging floating-point: $f(C) - \sum f(c(x))$ can dip slightly below zero from rounding, and a negative entropy crashed my checker. Clamped at zero.</li></ol>
+</article>
+
+<p class="backlink"><a href="/writing/">&larr; All writing</a></p>
+</main>
+
+<footer class="pagefoot">
+  <div class="colophon">Set in Latin Modern. &copy; 2026 Nathan DeMoss.</div>
+</footer>
+
+</body>
+</html>

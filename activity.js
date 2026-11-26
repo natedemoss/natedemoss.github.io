@@ -1,10 +1,12 @@
-// Most recent public GitHub activity. Unauthenticated, so it is rate limited
-// per visitor; on any failure the line just stays hidden.
+// Recent public GitHub activity as rows of a booktabs table.
+// Unauthenticated, so it is rate limited per visitor; on failure the table
+// says so and links to the profile instead.
 (function () {
-  var el = document.getElementById('activity');
-  if (!el || !window.fetch) return;
+  var body = document.getElementById('activity-rows');
+  if (!body || !window.fetch) return;
 
   var USER = 'natedemoss';
+  var MAX_ROWS = 6;
 
   function ago(iso) {
     var secs = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -23,29 +25,54 @@
     var p = ev.payload || {};
     switch (ev.type) {
       case 'PushEvent':
-        // Public push payloads do not reliably carry a commit count.
-        return 'Pushed to';
+        return 'Pushed';
       case 'PullRequestEvent':
-        if (p.action === 'closed' && p.pull_request && p.pull_request.merged) {
-          return 'Merged a pull request in';
-        }
-        if (p.action === 'opened') return 'Opened a pull request in';
+        if (p.action === 'closed' && p.pull_request && p.pull_request.merged) return 'Merged PR';
+        if (p.action === 'opened') return 'Opened PR';
         return null;
+      case 'PullRequestReviewEvent':
+        return 'Reviewed PR';
       case 'CreateEvent':
-        if (p.ref_type === 'repository') return 'Started';
-        return null;
+        return p.ref_type === 'repository' ? 'Created repo' : null;
       case 'IssuesEvent':
-        return p.action === 'opened' ? 'Opened an issue in' : null;
+        return p.action === 'opened' ? 'Opened issue' : null;
       case 'IssueCommentEvent':
-        return p.action === 'created' ? 'Commented in' : null;
+        return p.action === 'created' ? 'Commented' : null;
       case 'ReleaseEvent':
         return p.action === 'published' ? 'Released' : null;
+      case 'WatchEvent':
+        return 'Starred';
+      case 'ForkEvent':
+        return 'Forked';
       default:
         return null;
     }
   }
 
-  fetch('https://api.github.com/users/' + USER + '/events/public?per_page=30', {
+  function cell(tag, cls, child) {
+    var el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (typeof child === 'string') el.textContent = child;
+    else if (child) el.appendChild(child);
+    return el;
+  }
+
+  function fail() {
+    body.textContent = '';
+    var a = document.createElement('a');
+    a.href = 'https://github.com/' + USER;
+    a.textContent = 'github.com/' + USER;
+    var td = cell('td', 'placeholder');
+    td.colSpan = 3;
+    td.appendChild(document.createTextNode('Could not reach the GitHub API; see '));
+    td.appendChild(a);
+    td.appendChild(document.createTextNode('.'));
+    var tr = document.createElement('tr');
+    tr.appendChild(td);
+    body.appendChild(tr);
+  }
+
+  fetch('https://api.github.com/users/' + USER + '/events/public?per_page=50', {
     headers: { Accept: 'application/vnd.github+json' }
   })
     .then(function (r) {
@@ -58,21 +85,31 @@
         return new Date(y.created_at) - new Date(x.created_at);
       });
 
-      for (var i = 0; i < events.length; i++) {
+      var rows = [];
+      for (var i = 0; i < events.length && rows.length < MAX_ROWS; i++) {
         var verb = describe(events[i]);
         if (!verb) continue;
-
         var repo = events[i].repo.name;
-        var a = document.createElement('a');
-        a.href = 'https://github.com/' + repo;
-        a.textContent = repo;
-
-        el.appendChild(document.createTextNode(verb + ' '));
-        el.appendChild(a);
-        el.appendChild(document.createTextNode(', ' + ago(events[i].created_at) + '.'));
-        el.hidden = false;
-        return;
+        var prev = rows[rows.length - 1];
+        // Collapse runs of the same thing (five pushes to one repo is one row).
+        if (prev && prev.verb === verb && prev.repo === repo) continue;
+        rows.push({ verb: verb, repo: repo, at: events[i].created_at });
       }
+      if (!rows.length) throw new Error('empty');
+
+      body.textContent = '';
+      rows.forEach(function (r) {
+        var a = document.createElement('a');
+        a.href = 'https://github.com/' + r.repo;
+        a.textContent = r.repo;
+        var tr = document.createElement('tr');
+        tr.appendChild(cell('td', '', r.verb));
+        tr.appendChild(cell('td', 'tt', a));
+        var when = cell('td', 'r when', ago(r.at));
+        when.title = new Date(r.at).toLocaleString();
+        tr.appendChild(when);
+        body.appendChild(tr);
+      });
     })
-    .catch(function () { /* leave the line hidden */ });
+    .catch(fail);
 })();
